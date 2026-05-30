@@ -1,15 +1,52 @@
 import { useState } from "react";
-import { ChevronRight, ChevronLeft, Moon, Sun, RotateCcw, Info, CheckCircle, Zap, Target, Users, TrendingUp, BarChart2, ArrowRight, AlertTriangle, BookOpen, GitBranch, Lightbulb, Copy, ChevronDown } from "lucide-react";
+import { ChevronRight, ChevronLeft, Moon, Sun, RotateCcw, Info, CheckCircle, Zap, Target, Users, TrendingUp, BarChart2, AlertTriangle, BookOpen, GitBranch, Lightbulb, Copy, ChevronDown, HelpCircle } from "lucide-react";
+
+
+// ─── JARGON GLOSSARY ─────────────────────────────────────────────────────────
+const GLOSSARY = {
+  "dependent variable": "The outcome you are measuring — the thing you expect to change. Also called DV or outcome variable.\n\nExample: If you study whether stress affects sleep, sleep is the dependent variable.",
+  "independent variable": "The variable you think causes or predicts the outcome. Also called IV or predictor.\n\nExample: If you study whether stress affects sleep, stress is the independent variable.",
+  "parametric": "A statistical test that assumes your data follows a normal (bell-shaped) distribution. Generally more powerful but stricter about data requirements.\n\nExamples: t-test, ANOVA, Pearson r.",
+  "non-parametric": "A statistical test that makes NO assumptions about the shape of your data. Safer when data is skewed or when you have small samples.\n\nExamples: Mann-Whitney, Kruskal-Wallis, Spearman.",
+  "normality": "Whether your data follows a bell-shaped (normal) curve. Checked using Shapiro-Wilk test, Q-Q plot, or histogram. Many statistical tests assume this.",
+  "CLT": "Central Limit Theorem — if your sample is large enough (n>30), the average of your data will be roughly normal even if the raw scores are not. This means parametric tests can work with larger samples even when data looks slightly skewed.",
+  "p-value": "The probability of getting your result by chance alone. p < .05 means less than 5% chance your result is due to luck — this is the standard cutoff in psychology.",
+  "effect size": "How big or meaningful your finding actually is. A p-value only tells you IF an effect exists — effect size tells you if it MATTERS. Always report both.",
+  "post-hoc": "Follow-up tests run after ANOVA when you have 3+ groups. ANOVA tells you 'at least one group differs' — post-hoc tests tell you WHICH specific groups differ.\n\nCommon ones: Tukey HSD, Bonferroni.",
+  "homoscedasticity": "A technical term meaning that the spread (variance) of your data is roughly equal across groups. Checked using Levene's test in SPSS.",
+  "sphericity": "An assumption specific to Repeated Measures ANOVA. It means the differences between all pairs of time points have similar variance. Checked with Mauchly's test in SPSS.",
+  "bootstrapping": "A technique that re-samples your data thousands of times to estimate confidence intervals. Used in mediation analysis. More reliable than traditional methods for indirect effects.",
+  "monotonic": "A relationship where as one variable increases, the other consistently increases or decreases — but not necessarily at a constant rate. Spearman detects monotonic relationships.",
+  "multicollinearity": "When two or more predictor variables in a regression are highly correlated with each other. Makes it hard to tell which predictor is doing the work. Checked using VIF values — VIF > 10 is a problem.",
+  "odds ratio": "Used in logistic regression. An OR of 2.0 means the ODDS of the outcome are twice as high — NOT that it is twice as likely. Important distinction for rare outcomes.",
+  "continuous": "Data that can take any numeric value including decimals. Examples: height, weight, test scores, reaction time.",
+  "ordinal": "Data with a meaningful order but unequal gaps between values. Example: Likert scales (Strongly Disagree to Strongly Agree).",
+  "binary": "Data with exactly two categories. Examples: Yes/No, Pass/Fail, Diagnosed/Not Diagnosed.",
+  "categorical": "Data that falls into distinct groups with no natural order. Examples: nationality, type of therapy, faculty/department.",
+  "between-subjects": "Each participant is in only one group — measured once. Also called independent samples.",
+  "within-subjects": "The same participants are measured more than once — across time points or conditions. Also called repeated measures or paired design.",
+  "residuals": "The difference between what your model predicted and what you actually observed. Normality in t-tests and ANOVA applies to residuals — checked AFTER running the model.",
+  "VIF": "Variance Inflation Factor — a number that tells you how much multicollinearity is affecting a predictor in regression. VIF > 10 indicates a serious problem.",
+  "APA style": "The reporting format required by the American Psychological Association. Used in most psychology dissertations worldwide. Specifies exactly how to report statistics.",
+  "cronbach alpha": "A measure of internal consistency — how well all items on a questionnaire measure the same thing. Report before your main analysis. α > .70 is generally acceptable.",
+  "type I error": "Rejecting the null hypothesis when it is actually true — a false positive. Probability equals your alpha level (usually .05).",
+  "type II error": "Failing to reject the null hypothesis when it is actually false — a false negative. Reduced by increasing sample size.",
+  "statistical power": "The probability that your test will detect a real effect if one exists. Aim for .80 (80%) minimum.",
+  "null hypothesis": "The default assumption that there is no effect or relationship. Your statistical test evaluates whether the data provides enough evidence to reject it.",
+  "confidence interval": "A range of values within which the true population value likely falls (usually 95% CI). Wider intervals mean more uncertainty.",
+  "mediation": "When a third variable (M) explains the relationship between X and Y. Example: Stress → Sleep Problems → Poor Grades.",
+  "moderation": "When a third variable (W) changes the strength or direction of the relationship between X and Y. Example: The effect of stress on grades may be stronger for students with low social support.",
+};
 
 const TIPS = {
-  continuous:"Numeric, any value in a range — e.g. score, reaction time.",
+  continuous:"Numeric, any value in a range — e.g. score, reaction time, age, percentage.",
   ordinal:"Ordered categories, unequal intervals — e.g. Likert 1–5. Always treated as non-parametric.",
   categorical:"Distinct, unordered groups — e.g. nationality, condition.",
   binary:"Exactly two values — yes/no, pass/fail.",
-  "independent samples":"Different participants in each group (between-subjects).",
-  "paired samples":"Same participants measured twice — before/after.",
-  "repeated measures":"Same participants measured 3+ times.",
-  normality:"For t-tests and ANOVA, normality applies to the residuals — checked AFTER running the model. For raw data, n>30 helps via CLT, but always check for severe skew.",
+  "independent samples":"Different participants in each group — each person is only measured once (between-subjects).",
+  "paired samples":"The same participants measured at two time points — e.g. before and after an intervention.",
+  "repeated measures":"The same participants measured three or more times across different conditions or time points.",
+  normality:"Whether your data follows a bell-shaped curve. Checked using Shapiro-Wilk test, Q-Q plot, or histogram. For t-tests/ANOVA, normality applies to the residuals — checked AFTER running the model.",
   mediation:"A mediator (M) explains the mechanism: X→M→Y. Requires causal ordering grounded in theory — not just data.",
   "composite scale":"Built from multiple items (e.g. PHQ-9, GAD-7). Averaged scores are treated as continuous with n>30 — discuss with your supervisor.",
   "kendall":"Kendall's τ-b is preferred over Spearman when there are many tied ranks or small samples. It is directly interpretable as concordance minus discordance probability.",
@@ -21,12 +58,14 @@ const FIT_COL={5:"#22c55e",4:"#3b82f6",3:"#f59e0b",2:"#94a3b8"};
 
 const T={
   welch_ttest:{n:"Welch's Independent t-Test",e:"👥",b:"Parametric",fit:5,altKey:"mann_whitney",
+    plain:"Compare two separate groups on a numeric score",
     tl:"Compare two independent groups — robust to unequal variances",
     why:"Welch's is the modern default for two independent groups. Unlike Student's t, it doesn't assume equal variances, performing equally well when variances are equal and better when they differ (Field, 2018).",
     ass:["Continuous DV","Approximately normal per group (or n>30 by CLT — check for severe skew)","Independent observations","No assumption of equal variances required"],
     alt:{n:"Mann-Whitney U Test",w:"when normality is violated"},
     eff:"Cohen's d — small≥0.20, medium≥0.50, large≥0.80",
     ex:"Comparing mean anxiety (GAD-7) between a CBT group and a waitlist control.",
+    ex_plain:"e.g. Do male and female students differ in average stress scores? Do hostel students score higher on loneliness than day scholars?",
     viz:"Side-by-side box plots; bar chart with mean ± 95% CI",
     spss:"Analyze → Compare Means → Independent-Samples T Test → use 'Equal variances not assumed' row in output",
     jmv:"T-Tests → Independent Samples T-Test (Welch's is the default in jamovi)",
@@ -34,12 +73,14 @@ const T={
     sup:"Supervisors may ask: 'Why Welch's not Student's t?' Answer: Welch's is the modern recommended default — robust to variance inequality with negligible cost when variances are equal.",
   },
   paired_ttest:{n:"Paired Samples t-Test",e:"🔄",b:"Parametric",fit:5,altKey:"wilcoxon",
+    plain:"See if scores changed in the same people over time",
     tl:"Track changes in the same participants over time",
     why:"Analyses difference scores within the same participants — more powerful than an independent t-test by controlling for individual variation.",
     ass:["Continuous DV","Same participants at both time points","Difference scores approximately normal","No significant outliers in differences"],
     alt:{n:"Wilcoxon Signed-Rank Test",w:"when differences are non-normal"},
     eff:"Cohen's d from difference scores",
     ex:"PHQ-9 depression scores before vs. after a 12-week mindfulness programme.",
+    ex_plain:"e.g. Did exam anxiety scores decrease after students attended a stress management workshop? Did sleep quality improve after a college wellness programme?",
     viz:"Paired line plot; histogram of difference scores",
     spss:"Analyze → Compare Means → Paired-Samples T Test",
     jmv:"T-Tests → Paired Samples T-Test",
@@ -47,12 +88,14 @@ const T={
     sup:"Report t, df, p, and Cohen's d. Check whether a control group was available — without one, alternative explanations for change cannot be ruled out.",
   },
   oneway_anova:{n:"One-Way ANOVA",e:"📊",b:"Parametric",fit:4,altKey:"kruskal_wallis",
+    plain:"Compare three or more separate groups on a numeric score",
     tl:"Compare three or more independent groups",
     why:"Tests whether at least one group mean differs — protecting against inflated Type I error from multiple t-tests.",
     ass:["Continuous DV","Normality within each group","Homogeneity of variance (Levene's test)","Independent observations"],
     alt:{n:"Kruskal-Wallis Test",w:"when normality or equal variances are violated"},
     eff:"Eta-squared η² — small≥0.01, medium≥0.06, large≥0.14",
     ex:"Comparing wellbeing across lecture, flipped, and problem-based learning groups.",
+    ex_plain:"e.g. Do stress levels differ across Arts, Science, and Commerce students? Is satisfaction different across three different teaching formats?",
     viz:"Box plots per group; means plot with 95% CI",
     ph:"Tukey HSD or Bonferroni; Games-Howell if Levene's test is significant",
     spss:"Analyze → Compare Means → One-Way ANOVA → Post Hoc",
@@ -61,12 +104,14 @@ const T={
     sup:"Always report the omnibus F, η², and post-hoc results with corrected p-values. Reviewers will ask which groups differed.\n\n⚠️ If you have two independent variables (e.g. treatment × gender), you likely need a two-way factorial ANOVA — consult your supervisor.",
   },
   rm_anova:{n:"Repeated Measures ANOVA",e:"🔁",b:"Parametric",fit:4,altKey:"friedman",
+    plain:"Track the same people across three or more time points",
     tl:"Track the same participants across 3+ time points",
     why:"Accounts for within-subject variance to dramatically increase power across 3+ conditions in the same sample.",
     ass:["Continuous DV","Sphericity — Mauchly's test; use Greenhouse-Geisser correction if violated","Approximately normal residuals"],
     alt:{n:"Friedman Test",w:"when sphericity or normality is violated"},
     eff:"Partial η²p or generalised η²G (these are not the same — specify which you report)",
     ex:"Wellbeing at baseline, 3, 6, and 12 months post-intervention.",
+    ex_plain:"e.g. Did motivation scores change across the start, middle, and end of semester in the same group of students?",
     viz:"Line chart of means over time with SE bars",
     spss:"Analyze → General Linear Model → Repeated Measures",
     jmv:"ANOVA → Repeated Measures ANOVA",
@@ -74,6 +119,7 @@ const T={
     sup:"Report whether Mauchly's test was significant. Specify the correction applied (Greenhouse-Geisser or Huynh-Feldt) and the corrected df. Clarify whether you report partial or generalised η².",
   },
   mann_whitney:{n:"Mann-Whitney U Test",e:"🏅",b:"Non-Parametric",fit:4,altKey:"welch_ttest",
+    plain:"Compare two separate groups when data is skewed or not normal",
     tl:"Compare two groups without assuming normality",
     why:"Your data doesn't quite fit the standard mould — Mann-Whitney compares rank distributions between two independent groups; fully distribution-free.",
     ass:["Ordinal or continuous DV","Independent observations","Similar distribution shapes (critical: when shapes differ, Mann-Whitney tests probability of superiority, not medians)"],
@@ -86,6 +132,7 @@ const T={
     cnt:"When group distributions differ in shape (not just location), Mann-Whitney tests the probability that a randomly chosen observation from Group A exceeds one from Group B — not the median difference. Report medians, not means.",
   },
   wilcoxon:{n:"Wilcoxon Signed-Rank Test",e:"✍️",b:"Non-Parametric",fit:4,altKey:"paired_ttest",
+    plain:"Compare the same people at two time points when data is skewed",
     tl:"Paired comparison without normality assumption",
     why:"Your paired data doesn't quite fit the standard mould — Wilcoxon uses ranks of difference scores; no distribution assumed.",
     ass:["Paired observations","Ordinal or continuous DV","Differences can be meaningfully ranked"],
@@ -98,6 +145,7 @@ const T={
     cnt:"Reports whether the typical change is zero — not the magnitude of change in original measurement units.",
   },
   kruskal_wallis:{n:"Kruskal-Wallis Test",e:"📈",b:"Non-Parametric",fit:4,altKey:"oneway_anova",
+    plain:"Compare three or more separate groups when data is skewed",
     tl:"Compare 3+ independent groups without normality",
     why:"Your data doesn't fit the standard mould — Kruskal-Wallis uses rank-based comparisons across 3+ independent groups.",
     ass:["Ordinal or continuous DV","Independent observations","Similar distribution shapes"],
@@ -124,12 +172,14 @@ const T={
     cnt:"Shows whether conditions differ in rank order — not the size of change in original measurement units.",
   },
   pearson:{n:"Pearson Correlation (r)",e:"📉",b:"Parametric",fit:5,altKey:"spearman",
+    plain:"Measure the relationship between two numeric variables",
     tl:"Measure linear relationship between two continuous variables",
     why:"Both variables are continuous and approximately normally distributed. Pearson r quantifies the strength and direction (−1 to +1) of the linear relationship. Note: bivariate normality is required — check both variables, not just one.",
     ass:["Both variables continuous","Both variables approximately normally distributed (check each separately)","Linear relationship — verify with scatter plot","No significant outliers in either variable"],
     alt:{n:"Spearman's Rank Correlation (ρ)",w:"when either variable is non-normal or ordinal"},
     eff:"r itself — small≥0.10, medium≥0.30, large≥0.50",
     ex:"Correlating weekly exercise hours with WEMWBS wellbeing scores.",
+    ex_plain:"e.g. Is there a relationship between hours of social media use and loneliness scores? Does sleep duration relate to exam performance?",
     viz:"Scatter plot with regression line and 95% confidence band",
     spss:"Analyze → Correlate → Bivariate → select Pearson",
     jmv:"Regression → Correlation Matrix → select Pearson's r",
@@ -137,6 +187,7 @@ const T={
     sup:"Check both variables for normality and inspect the scatter plot for linearity and outliers before computing r. Always report r, df, and p.",
   },
   spearman:{n:"Spearman's Rank Correlation (ρ)",e:"🔗",b:"Non-Parametric",fit:4,altKey:"pearson",
+    plain:"Measure the relationship between two variables when data is skewed or on rating scales",
     tl:"Robust correlation for non-normal or ordinal data",
     why:"Your data doesn't quite fit the standard mould — Spearman uses ranks, is robust to outliers, and needs no normality.",
     ass:["Ordinal or continuous variables","Monotonic relationship — check scatter plot","No normality required"],
@@ -175,6 +226,7 @@ const T={
     sup:"Note in your write-up that you used the point-biserial correlation (r_pb), even though SPSS computes it as Pearson r — they are mathematically identical.",
   },
   simple_regression:{n:"Simple Linear Regression",e:"📐",b:"Parametric",fit:4,
+    plain:"Predict a numeric outcome using one predictor variable",
     tl:"Predict a continuous outcome from one predictor",
     why:"Estimates the linear relationship between one predictor and a continuous outcome, quantifying change per unit of the predictor. Mathematically equivalent to Pearson r — both yield the same R², F, and p-value for simple regression.",
     ass:["Linear relationship","Normal residuals — verified AFTER running the model with a Q-Q plot (not the raw DV)","Homoscedasticity","Independent observations"],
@@ -188,6 +240,7 @@ const T={
     sup:"Note: normality applies to the residuals, checked AFTER running the model — not to the raw dependent variable.",
   },
   multiple_regression:{n:"Multiple Linear Regression",e:"🔮",b:"Parametric",fit:4,
+    plain:"Predict a numeric outcome using multiple predictor variables simultaneously",
     tl:"Predict a continuous outcome from multiple predictors",
     why:"Partials out each predictor's unique contribution while controlling for all others — essential when predictors are intercorrelated.",
     ass:["Linear relationships","Normal residuals","Homoscedasticity","No multicollinearity (VIF<10)","Independent observations"],
@@ -225,12 +278,14 @@ const T={
     cnt:"Results are relative to a reference category — the choice of reference category changes all odds ratio values.",
   },
   chi_square:{n:"Chi-Square Test (χ²)",e:"🔲",b:"Non-Parametric",fit:4,altKey:"fisher_exact",
+    plain:"Test whether two categorical variables are linked",
     tl:"Test association between two categorical variables",
     why:"Tests whether observed cell frequencies differ from independence expectations — no distribution assumption needed.",
     ass:["Both variables categorical","Independent observations","Expected cell frequencies ≥5 in ALL cells","Random sampling"],
     alt:{n:"Fisher's Exact Test",w:"when any expected cell frequency is < 5"},
     eff:"Cramér's V — small≥0.10, medium≥0.30, large≥0.50",
     ex:"Gender × preference for face-to-face vs. online therapy.",
+    ex_plain:"e.g. Is there a link between stream (Arts/Science/Commerce) and type of career anxiety (low/medium/high)? Is gender associated with preferred study method?",
     viz:"Stacked bar chart; mosaic plot",
     spss:"Analyze → Descriptive Statistics → Crosstabs → Statistics → Chi-square",
     jmv:"Frequencies → Contingency Tables",
@@ -275,6 +330,7 @@ const T={
     ph:"Pairwise McNemar tests with Bonferroni correction",
   },
   mediation_moderation:{n:"Mediation / Moderation Analysis",e:"🔀",b:"Advanced",fit:3,
+    plain:"Understand HOW or WHEN a relationship between two variables occurs",
     tl:"Unpack how and when relationships occur",
     why:"Reveals mechanisms (mediation: X→M→Y) or boundary conditions (moderation: when does X→Y change?). This is structurally a series of regression models requiring causal ordering established by theory — not just statistical association.",
     ass:["Causal ordering grounded in theory — not just statistical association","Bootstrapping recommended for indirect effects (n≥200)","Measurement reliability across all variables"],
@@ -427,19 +483,19 @@ function nextQ(q,a){
 }
 
 const QS={
-  objective:{title:"What is your primary research objective?",sub:"This shapes your entire statistical strategy",Icon:Target,key:"objective",opts:[{id:"compare",label:"Compare groups or conditions",desc:'"Do men and women differ in stress levels?"',emoji:"⚖️"},{id:"relationship",label:"Explore a relationship between variables",desc:'"Is anxiety related to sleep quality?"',emoji:"🔗"},{id:"predict",label:"Predict an outcome variable",desc:'"What factors predict academic performance?"',emoji:"🎯"},{id:"association",label:"Test association between two categorical variables",desc:'"Is gender linked to therapy preference?"',emoji:"🔲"}]},
+  objective:{title:"What are you trying to find out?",sub:"Pick the option that best matches your research question",Icon:Target,key:"objective",opts:[{id:"compare",label:"Are two or more groups different from each other?",desc:'e.g. "Do hostel students have higher stress than day scholars?"',emoji:"⚖️"},{id:"relationship",label:"Is there a relationship between two variables?",desc:'e.g. "Is social media use related to loneliness?"',emoji:"🔗"},{id:"predict",label:"Can one or more variables predict another?",desc:'e.g. "Can attendance predict exam performance?"',emoji:"🎯"},{id:"association",label:"Are two categories linked to each other?",desc:'e.g. "Is gender linked to career choice?"',emoji:"🔲"}]},
   assoc_type:{title:"What level of measurement are your two variables?",sub:"This determines which association test is most appropriate",Icon:BarChart2,key:"assocType",opts:[{id:"nominal",label:"Both nominal — unordered categories",desc:"e.g. gender × treatment type, diagnosis × therapy preference",emoji:"🗂️"},{id:"ordinal",label:"One or both are ordinal — ordered or ranked",desc:"e.g. education level, agreement scale, ranked preferences",emoji:"🏷️",tip:"ordinal"}]},
   cell_size:{title:"Do you expect any cells to have fewer than 5 observations?",sub:"Chi-square becomes unreliable with very small expected cell counts",info:"Estimate expected counts: (row total × column total) ÷ grand total. If any cell is likely <5, Fisher's Exact Test is more appropriate — very common in small psychology studies.",Icon:AlertTriangle,key:"cellSize",opts:[{id:"adequate",label:"No — all expected cells should have ≥5 observations",desc:"Chi-square is appropriate for your sample size",emoji:"✅"},{id:"small",label:"Yes — some cells may have fewer than 5",desc:"Common with n<40 or very unequal group sizes",emoji:"⚠️"}]},
-  groups:{title:"How many groups are you comparing?",sub:"Count the distinct conditions in your study",Icon:Users,key:"groups",opts:[{id:"2",label:"Two groups",desc:"e.g. control vs. experimental, male vs. female",emoji:"2️⃣"},{id:"3plus",label:"Three or more groups",desc:"e.g. three treatment conditions, four age brackets",emoji:"3️⃣"}]},
-  design:{title:"What is your study design?",sub:"How do participants relate to the conditions?",Icon:GitBranch,key:"design",opts:[{id:"independent",label:"Independent samples",desc:"Different participants in each group — between-subjects",emoji:"👥",tip:"independent samples"},{id:"paired",label:"Paired / matched (exactly 2 time points)",desc:"Same participants measured twice only — pre/post design",emoji:"🔄",tip:"paired samples"},{id:"repeated",label:"Repeated measures (3 or more time points)",desc:"Same participants measured across 3 or more conditions",emoji:"🔁",tip:"repeated measures"}]},
-  dv_type:{title:"What type is your dependent variable?",sub:"The outcome you are measuring in your study",Icon:BarChart2,key:"dvType",opts:[{id:"continuous",label:"Continuous",desc:"Any numeric value — scores, times, measurements",emoji:"📏",tip:"continuous"},{id:"ordinal",label:"Ordinal",desc:"Ordered categories, unequal intervals — always treated as non-parametric",emoji:"🏷️",tip:"ordinal"},{id:"likert",label:"Likert Scale (1–5 or 1–7)",desc:"Rating scale — e.g. anxiety, satisfaction, wellbeing items",emoji:"⭐"},{id:"binary",label:"Binary",desc:"Exactly two outcomes — yes/no, pass/fail",emoji:"🔘",tip:"binary"},{id:"categorical",label:"Categorical (3+ unordered groups)",desc:"Groups with no natural order — e.g. nationality",emoji:"🗂️",tip:"categorical"}]},
-  likert_type:{title:"Is this a single item or a composite scale?",sub:"This determines which statistical approach is appropriate",info:"Single item (e.g. 'Rate your anxiety 1–5') → treat as ordinal → non-parametric recommended.\nComposite scale (e.g. PHQ-9, GAD-7, WEMWBS — items averaged) + n>30 → parametric is widely accepted (Norman, 2010) — discuss with your supervisor.",Icon:Lightbulb,key:"likertType",opts:[{id:"single",label:"Single item",desc:"One rating question — e.g. 'Rate your satisfaction from 1 to 7'",emoji:"1️⃣"},{id:"multi",label:"Multi-item composite scale",desc:"Multiple items averaged or summed — e.g. PHQ-9, GAD-7, WEMWBS",emoji:"📋",tip:"composite scale"}]},
+  groups:{title:"How many groups are you comparing?",sub:"Count the distinct categories or conditions in your study",Icon:Users,key:"groups",opts:[{id:"2",label:"Two groups",desc:"e.g. male vs female, experimental vs control, first year vs final year",emoji:"2️⃣"},{id:"3plus",label:"Three or more groups",desc:"e.g. three teaching methods, four departments, five year groups",emoji:"3️⃣"}]},
+  design:{title:"Are the same people in all your groups, or different people?",sub:"This is one of the most important decisions in choosing your statistical test",Icon:GitBranch,key:"design",opts:[{id:"independent",label:"Different people in each group",desc:"Each participant appears in one group only — between-subjects design",emoji:"👥",tip:"independent samples"},{id:"paired",label:"The same people measured twice (before and after)",desc:"Same participants at exactly two time points — pre-test and post-test",emoji:"🔄",tip:"paired samples"},{id:"repeated",label:"The same people measured three or more times",desc:"Same participants across 3 or more conditions or time points",emoji:"🔁",tip:"repeated measures"}]},
+  dv_type:{title:"What kind of data is your outcome — the thing you are measuring?",sub:"Your outcome (dependent variable) is the variable you expect might change",Icon:BarChart2,key:"dvType",opts:[{id:"continuous",label:"A number — scores, times, measurements, percentages",desc:"e.g. exam score, reaction time, height, anxiety score on a validated scale",emoji:"📏",tip:"continuous"},{id:"ordinal",label:"Ordered ratings — but the gaps between values are unequal",desc:"e.g. ranked preference (1st, 2nd, 3rd), position in class",emoji:"🏷️",tip:"ordinal"},{id:"likert",label:"A rating scale — e.g. 1 to 5 or 1 to 7",desc:"e.g. 'How stressed are you?' rated 1 (not at all) to 5 (extremely)",emoji:"⭐"},{id:"binary",label:"A yes/no or two-category outcome",desc:"e.g. pass/fail, present/absent, diagnosed/not diagnosed",emoji:"🔘",tip:"binary"},{id:"categorical",label:"Three or more categories with no natural order",desc:"e.g. preferred counselling type, chosen stream, nationality",emoji:"🗂️",tip:"categorical"}]},
+  likert_type:{title:"Is this a single question or a full questionnaire with multiple items?",sub:"This changes which statistical approach is most appropriate",info:"Single question (e.g. 'Rate your stress from 1–5') → treat as ordinal → use non-parametric test.\n\nFull questionnaire (e.g. PSS-10, BDI-II, DASS-21 — items added or averaged) → if n>30, treat as continuous → parametric is acceptable.\n\n⚠️ Before your main analysis, always report Cronbach's alpha to confirm your scale is reliable (α > .70 is acceptable).",Icon:Lightbulb,key:"likertType",opts:[{id:"single",label:"A single rating question",desc:"One question only — e.g. 'How would you rate your overall happiness from 1–7?'",emoji:"1️⃣"},{id:"multi",label:"A questionnaire with multiple items added or averaged together",desc:"e.g. PSS (Perceived Stress Scale), BDI (Beck Depression Inventory), DASS-21",emoji:"📋",tip:"composite scale"}]},
   rel_type:{title:"What kind of relationship are you examining?",sub:"Choose the analysis that best fits your question",Icon:TrendingUp,key:"relType",opts:[{id:"two_continuous",label:"Correlation — two continuous variables",desc:'"How does sleep duration relate to cognitive performance?"',emoji:"📉"},{id:"two_ordinal",label:"Correlation — two ordinal or ranked variables",desc:'"Does education level relate to treatment preference?"',emoji:"🏷️",tip:"kendall"},{id:"cont_binary",label:"Correlation — continuous variable and a binary variable",desc:'"Does reaction time relate to diagnosis status (yes/no)?"',emoji:"⚡"},{id:"mediation",label:"Mediation or moderation analysis",desc:'"Does self-efficacy explain the stress–performance link?" — requires causal theory',emoji:"🔀",tip:"mediation"}]},
   pred_dv_type:{title:"What type is your outcome (dependent) variable?",sub:"The variable you want to predict",Icon:Target,key:"predDvType",opts:[{id:"continuous",label:"Continuous",desc:"Numeric outcome — score, time, measurement",emoji:"📏",tip:"continuous"},{id:"binary",label:"Binary / Dichotomous",desc:"Two categories — pass/fail, recovered/not recovered",emoji:"🔘",tip:"binary"},{id:"categorical",label:"Categorical (3+ unordered categories)",desc:"Multiple groups — e.g. which therapy type chosen",emoji:"🗂️",tip:"categorical"}]},
   pred_iv_count:{title:"How many predictor variables do you have?",sub:"Independent variables entering your model",Icon:BookOpen,key:"predIvCount",opts:[{id:"one",label:"One predictor",desc:"A single independent variable in the model",emoji:"1️⃣"},{id:"multiple",label:"Two or more predictors",desc:"Multiple IVs examined simultaneously",emoji:"🔢"}]},
-  norm_n:{title:"How many participants per group? (or total sample for correlations)",sub:"Larger samples help via the Central Limit Theorem — but always check for severe skew regardless",Icon:Users,key:"normN",opts:[{id:"under30",label:"Fewer than 30",desc:"Small sample — normality matters more here",emoji:"🔍"},{id:"n30_100",label:"30 to 100",desc:"Medium sample — CLT helps, but check for clear skew",emoji:"📊"},{id:"over100",label:"More than 100",desc:"Large sample — CLT applies strongly; parametric tests are robust",emoji:"📦"}]},
-  norm_check:{title:"How did you assess normality?",sub:"Most psychology data isn't perfectly normal — here's how to decide what to do",Icon:Zap,key:"normCheck",opts:[{id:"shapiro",label:"Shapiro-Wilk test",desc:"Statistical significance test for normality",emoji:"🔬",tip:"normality"},{id:"qqplot",label:"Q-Q plot",desc:"Visual — points should follow the diagonal line",emoji:"📈"},{id:"histogram",label:"Histogram",desc:"Visual — should look roughly bell-shaped",emoji:"📊"},{id:"all",label:"I used all three methods",desc:"Shapiro-Wilk + Q-Q plot + histogram — best practice",emoji:"🧪"},{id:"notchecked",label:"Haven't checked yet",desc:"That's okay — tell us what you see or expect",emoji:"❓"}]},
-  norm_result:{title:"What does your data look like?",sub:"Be as honest as you can — if you're unsure, we'll show you both options",Icon:BarChart2,key:"normResult",opts:[{id:"normal",label:"Clearly normal",desc:"Bell-shaped, symmetric — Q-Q plot points follow the diagonal closely",emoji:"🔔"},{id:"nonnormal",label:"Skewed or non-normal",desc:"Clear skew, outliers, non-symmetric histogram, or normality test failed",emoji:"↗️"},{id:"unsure",label:"I'm not sure — or my result was unclear",desc:"Haven't checked yet, or calculated but unsure how to interpret — we'll show you both paths",emoji:"🤔"}]},
+  norm_n:{title:"How many participants do you have per group?",sub:"Sample size affects how important normality checking is for your analysis",Icon:Users,key:"normN",opts:[{id:"under30",label:"Fewer than 30 per group",desc:"Small sample — normality is more important to check carefully here",emoji:"🔍"},{id:"n30_100",label:"30 to 100 per group",desc:"Medium sample — the Central Limit Theorem helps, but check for obvious skew",emoji:"📊"},{id:"over100",label:"More than 100 per group",desc:"Large sample — parametric tests are generally robust even with some skew",emoji:"📦"}]},
+  norm_check:{title:"How did you check whether your data is normally distributed?",sub:"Most psychology data is not perfectly normal — that is completely okay",Icon:Zap,key:"normCheck",opts:[{id:"shapiro",label:"Shapiro-Wilk test (in SPSS: Analyze → Explore → Normality plots)",desc:"A statistical test — p > .05 suggests normality is not violated",emoji:"🔬",tip:"normality"},{id:"qqplot",label:"Q-Q plot (the diagonal line graph in SPSS)",desc:"Visual check — points should follow the diagonal line closely",emoji:"📈"},{id:"histogram",label:"Histogram (a bar chart of your scores)",desc:"Visual check — should look roughly bell-shaped",emoji:"📊"},{id:"all",label:"I used all three methods",desc:"Shapiro-Wilk + Q-Q plot + histogram — this is best practice",emoji:"🧪"},{id:"notchecked",label:"I have not checked yet",desc:"That is okay — describe what you expect based on your data",emoji:"❓"}]},
+  norm_result:{title:"What does your data look like?",sub:"Be as honest as you can — if you are unsure, select the last option and we will show you both paths",Icon:BarChart2,key:"normResult",opts:[{id:"normal",label:"Clearly normal — bell-shaped and symmetric",desc:"Histogram looks like a bell; Q-Q plot points follow the diagonal closely; Shapiro-Wilk p > .05",emoji:"🔔"},{id:"nonnormal",label:"Skewed or non-normal — lopsided or has extreme values",desc:"Clear skew in histogram, Q-Q plot curves away, or Shapiro-Wilk p < .05",emoji:"↗️"},{id:"unsure",label:"I am not sure — my results were mixed or unclear",desc:"Methods disagreed, or you are unsure how to interpret the output — we will show you both options",emoji:"🤔"}]},
 };
 
 const QID_TO_KEY={objective:"objective",assoc_type:"assocType",cell_size:"cellSize",groups:"groups",design:"design",dv_type:"dvType",likert_type:"likertType",rel_type:"relType",pred_dv_type:"predDvType",pred_iv_count:"predIvCount",norm_n:"normN",norm_check:"normCheck",norm_result:"normResult"};
@@ -542,6 +598,42 @@ function HistoGuide({dark,normCheck}){
     </div>}
   </div>);}
 
+
+// ─── GLOSSARY MODAL ───────────────────────────────────────────────────────────
+function GlossaryModal({dark,onClose}){
+  const [search,setSearch]=useState("");
+  const tx1=dark?"#f1f5f9":"#0f172a";
+  const tx2=dark?"#94a3b8":"#475569";
+  const tx3=dark?"#64748b":"#94a3b8";
+  const filtered=Object.entries(GLOSSARY).filter(([k])=>k.toLowerCase().includes(search.toLowerCase()));
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)"}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:520,maxHeight:"80vh",borderRadius:20,background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:"0 20px 60px rgba(0,0,0,.3)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        <div style={{padding:"16px 18px",borderBottom:dark?"1px solid #334155":"1px solid #f1f5f9",display:"flex",alignItems:"center",gap:10}}>
+          <HelpCircle size={16} style={{color:"#6366f1",flexShrink:0}}/>
+          <div style={{flex:1}}>
+            <p style={{fontSize:14,fontWeight:700,color:tx1,margin:0}}>Statistics Glossary</p>
+            <p style={{fontSize:11,color:tx3,margin:0}}>Plain-English definitions of every term used in this app</p>
+          </div>
+          <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:tx3,lineHeight:1,padding:2}}>✕</button>
+        </div>
+        <div style={{padding:"10px 18px",borderBottom:dark?"1px solid #334155":"1px solid #f1f5f9"}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search terms..." style={{width:"100%",padding:"8px 12px",borderRadius:10,border:dark?"1px solid #334155":"1px solid #e2e8f0",background:dark?"#0f172a":"#f8fafc",color:tx1,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+        </div>
+        <div style={{overflowY:"auto",padding:"12px 18px",display:"flex",flexDirection:"column",gap:10}}>
+          {filtered.map(([term,def])=>(
+            <div key={term} style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(99,102,241,.06)":"#f8fafc",border:dark?"1px solid #334155":"1px solid #f1f5f9"}}>
+              <p style={{fontSize:12.5,fontWeight:700,color:dark?"#a5b4fc":"#4f46e5",margin:"0 0 4px",textTransform:"capitalize"}}>{term}</p>
+              <p style={{fontSize:12,color:tx2,margin:0,lineHeight:1.7,whiteSpace:"pre-line"}}>{def}</p>
+            </div>
+          ))}
+          {filtered.length===0&&<p style={{fontSize:13,color:tx3,textAlign:"center",padding:"20px 0"}}>No terms found for "{search}"</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Tip({term,dark}){
   const [s,setS]=useState(false);if(!TIPS[term]) return null;
   return(<span style={{position:"relative",display:"inline-flex"}}><button onMouseEnter={()=>setS(true)} onMouseLeave={()=>setS(false)} onClick={e=>{e.stopPropagation();setS(v=>!v)}} style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"#818cf8",lineHeight:1}}><Info size={11}/></button>{s&&<span style={{position:"absolute",bottom:"calc(100% + 4px)",left:0,zIndex:99,width:200,fontSize:11,lineHeight:1.6,borderRadius:10,padding:"8px 10px",background:"#1e293b",color:"#e2e8f0",boxShadow:"0 8px 24px rgba(0,0,0,.25)",pointerEvents:"none"}}>{TIPS[term]}</span>}</span>);}
@@ -614,7 +706,7 @@ function DualPanel({ans,swOverride,dark,onChoose}){
     </div>
   </div>);}
 
-function Result({ans,dark,onReset,hist,onJump}){
+function Result({ans,dark,onReset,hist,onJump,beginner=false}){
   const [tab,setTab]=useState("why");
   const [swOpen,setSwOpen]=useState(null);
   const [copied,setCopied]=useState(null);
@@ -639,7 +731,9 @@ function Result({ans,dark,onReset,hist,onJump}){
   const normNotChecked=ans.normCheck==="notchecked"&&effectiveNorm(effectiveAns)==="normal"&&!isDual;
   const wrData=curTK?WR[curTK]:null;
   const altDisplayName=altT?altT.n:tt.alt.n;
-  const TABS=[["why","Why?",Zap],["run","Run It",BookOpen],["wr","Write Up",Copy],["power","Power",TrendingUp],["ass","Assumptions",AlertTriangle]];
+  const TABS_ALL=[["why","Why?",Zap],["run","Run It",BookOpen],["wr","Write Up",Copy],["power","Power",TrendingUp],["ass","Assumptions",AlertTriangle]];
+  const TABS_BEG=[["why","What is this test?",Zap],["run","How to run it",BookOpen],["wr","What to write",Copy]];
+  const TABS=beginner?TABS_BEG:TABS_ALL;
   const doCopy=(text,key)=>{navigator.clipboard?.writeText(text).catch(()=>{});setCopied(key);setTimeout(()=>setCopied(null),2200);};
 
   return(<div style={{animation:"fadeUp .4s ease-out both"}}>
@@ -664,7 +758,7 @@ function Result({ans,dark,onReset,hist,onJump}){
                 {!viewAlt?<><CheckCircle size={14} style={{color:"#22c55e"}}/><span style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"#22c55e"}}>Recommended Test</span></>:<><span style={{fontSize:12}}>🔄</span><span style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:dark?"#818cf8":"#6366f1"}}>Alternative Test — Exploring</span></>}
               </div>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}><span style={{fontSize:24}}>{(curTT||tt).e}</span><h2 style={{margin:0,fontSize:18,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",lineHeight:1.2}}>{(curTT||tt).n}</h2></div>
-              <p style={{margin:"0 0 10px",fontSize:12.5,color:tx2}}>{(curTT||tt).tl}</p>
+              <p style={{margin:"0 0 10px",fontSize:12.5,color:tx2}}>{beginner?((curTT||tt).plain||(curTT||tt).tl):(curTT||tt).tl}</p>
               <div style={{display:"flex",gap:7,flexWrap:"wrap"}}><span style={{padding:"3px 10px",borderRadius:999,fontSize:11,fontWeight:700,background:bBg,color:bTx}}>{(curTT||tt).b}</span>{(curTT||tt).ph&&<span style={{padding:"3px 10px",borderRadius:999,fontSize:11,fontWeight:600,background:dark?"#334155":"#fff",color:tx3,border:`1px solid ${dark?"#475569":"#e2e8f0"}`}}>Post-hoc needed</span>}</div>
             </div>
             <FitBadge fit={(curTT||tt).fit} dark={dark}/>
@@ -690,7 +784,7 @@ function Result({ans,dark,onReset,hist,onJump}){
             <div style={{padding:"18px 20px"}}>
               {tab==="why"&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
                 <div><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:tx3,margin:"0 0 5px"}}>Why this test?</p><p style={{fontSize:13,lineHeight:1.7,color:tx2,margin:0}}>{curTT.why}</p></div>
-                <div style={{padding:"12px 14px",borderRadius:12,background:dark?"rgba(34,197,94,.07)":"#f0fdf4",border:`1px solid ${dark?"rgba(34,197,94,.18)":"#bbf7d0"}`}}><p style={{fontSize:10,fontWeight:700,color:dark?"#4ade80":"#15803d",margin:"0 0 4px"}}>💡 Example from psychology research</p><p style={{fontSize:13,lineHeight:1.7,color:dark?"#86efac":"#166534",margin:0}}>{curTT.ex}</p></div>
+                <div style={{padding:"12px 14px",borderRadius:12,background:dark?"rgba(34,197,94,.07)":"#f0fdf4",border:`1px solid ${dark?"rgba(34,197,94,.18)":"#bbf7d0"}`}}><p style={{fontSize:10,fontWeight:700,color:dark?"#4ade80":"#15803d",margin:"0 0 4px"}}>💡 Example from psychology research</p><p style={{fontSize:13,lineHeight:1.7,color:dark?"#86efac":"#166634",margin:0}}>{beginner?(curTT.ex_plain||curTT.ex):curTT.ex}</p></div>
                 <div><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:tx3,margin:"0 0 5px"}}>Effect size</p><p style={{fontSize:13,color:tx2,margin:0}}>{curTT.eff}</p></div>
                 <div><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:tx3,margin:"0 0 5px"}}>Suggested visualisation</p><p style={{fontSize:13,color:tx2,margin:0}}>{curTT.viz}</p></div>
                 {curTT.cnt&&<div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(239,68,68,.07)":"#fef2f2",border:`1px solid ${dark?"rgba(239,68,68,.2)":"#fecaca"}`}}><p style={{fontSize:10,fontWeight:700,color:dark?"#f87171":"#dc2626",margin:"0 0 3px"}}>🚫 This test cannot tell you</p><p style={{fontSize:12.5,color:dark?"#fca5a5":"#991b1b",margin:0}}>{curTT.cnt}</p></div>}
@@ -699,6 +793,7 @@ function Result({ans,dark,onReset,hist,onJump}){
                 <div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(255,255,255,.03)":"#f8fafc",border:`1px solid ${dark?"#334155":"#e2e8f0"}`}}><p style={{fontSize:11.5,color:tx3,margin:0}}>⚠️ <strong>Running multiple tests?</strong> If you are running several analyses on the same dataset, consider applying a Bonferroni correction (divide your α by the number of tests) to control the family-wise error rate. Discuss this with your supervisor.</p></div>
               </div>}
               {tab==="run"&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {beginner&&<div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(34,197,94,.07)":"#f0fdf4",border:`1px solid ${dark?"rgba(34,197,94,.18)":"#bbf7d0"}`}}><p style={{fontSize:12,color:dark?"#86efac":"#166634",margin:0}}>📌 <strong>Most Indian universities use SPSS.</strong> Follow the SPSS steps below. jamovi is a free alternative — download at jamovi.org</p></div>}
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}><p style={{fontSize:12,color:tx2,margin:0}}>Step-by-step for common software:</p><span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:dark?"rgba(34,197,94,.1)":"#f0fdf4",color:dark?"#4ade80":"#15803d",border:`1px solid ${dark?"rgba(34,197,94,.2)":"#bbf7d0"}`}}>jamovi &amp; JASP are free</span></div>
                 {[["SPSS",curTT.spss],["jamovi (free)",curTT.jmv],["JASP (free)","Same pathway as jamovi. Open JASP, navigate to the equivalent test section, and move your variables across."]].map(([swName,step])=>(<div key={swName} style={{borderRadius:12,overflow:"hidden",border:`1px solid ${dark?"#334155":"#e2e8f0"}`}}><button onClick={()=>setSwOpen(swOpen===swName?null:swName)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:dark?"#0f172a":"#f8fafc",border:"none",cursor:"pointer",color:dark?"#f1f5f9":"#1e293b"}}><span style={{fontSize:12.5,fontWeight:600}}>{swName}</span><ChevronDown size={14} style={{transform:swOpen===swName?"rotate(180deg)":"none",transition:"transform .2s",flexShrink:0}}/></button>{swOpen===swName&&<div style={{padding:"10px 14px",background:dark?"#1e293b":"#fff"}}><p style={{fontSize:13,lineHeight:1.7,color:tx2,margin:0,background:dark?"#0f172a":"#f1f5f9",padding:"8px 10px",borderRadius:8,fontFamily:"monospace"}}>{step}</p></div>}</div>))}
               </div>}
@@ -743,7 +838,7 @@ function Result({ans,dark,onReset,hist,onJump}){
     )}
   </div>);}
 
-function Question({qId,ans,onAns,onNext,onPrev,isFirst,animDir,dark}){
+function Question({qId,ans,onAns,onNext,onPrev,isFirst,animDir,dark,beginner=false}){
   const q=QS[qId];if(!q) return null;
   const {Icon}=q,sel=ans[q.key];
   const tx3=dark?"#64748b":"#94a3b8";
@@ -767,6 +862,8 @@ function Question({qId,ans,onAns,onNext,onPrev,isFirst,animDir,dark}){
 
 export default function App(){
   const [dark,setDark]=useState(false);
+  const [beginner,setBeginner]=useState(true);
+  const [showGlossary,setShowGlossary]=useState(false);
   const [cQ,setCQ]=useState("objective");
   const [ans,setAns]=useState({});
   const [hist,setHist]=useState(["objective"]);
@@ -815,8 +912,8 @@ export default function App(){
   const MainContent=(
     <>
       {cQ==="result"
-        ?<Result key={aKey} ans={ans} dark={dark} onReset={reset} hist={hist} onJump={handleJump}/>
-        :<Question key={aKey} qId={cQ} ans={ans} onAns={(k,v)=>setAns(a=>({...a,[k]:v}))} onNext={handleNext} onPrev={handlePrev} isFirst={hist.length===1} animDir={aDir} dark={dark}/>
+        ?<Result key={aKey} ans={ans} dark={dark} onReset={reset} hist={hist} onJump={handleJump} beginner={beginner}/>
+        :<Question key={aKey} qId={cQ} ans={ans} onAns={(k,v)=>setAns(a=>({...a,[k]:v}))} onNext={handleNext} onPrev={handlePrev} isFirst={hist.length===1} animDir={aDir} dark={dark} beginner={beginner}/>
       }
       <p style={{textAlign:"center",fontSize:11,color:dark?"#475569":"#cbd5e1",marginTop:20}}>Based on APA &amp; Field (2018) statistical guidelines</p>
     </>
@@ -857,6 +954,14 @@ export default function App(){
             <p style={{fontSize:11,color:tx2,margin:0,lineHeight:1.5}}>{d}</p>
           </div>
         ))}
+        <button onClick={()=>setShowGlossary(true)} style={{width:"100%",marginTop:4,padding:"8px 0",borderRadius:10,border:`1px solid ${dark?"#334155":"#e2e8f0"}`,background:"none",cursor:"pointer",fontSize:11.5,fontWeight:600,color:dark?"#818cf8":"#6366f1",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><HelpCircle size={12}/>Open glossary ({Object.keys(GLOSSARY).length} terms)</button>
+        {[["PLACEHOLDER","REMOVE"]]
+        ].map(([t,d])=>(
+          <div key={t} style={{marginBottom:8,paddingBottom:8,borderBottom:dark?"1px solid #1e293b":"1px solid #f1f5f9"}}>
+            <p style={{fontSize:11,fontWeight:700,color:dark?"#e2e8f0":"#1e293b",margin:"0 0 2px"}}>{t}</p>
+            <p style={{fontSize:11,color:tx2,margin:0,lineHeight:1.5}}>{d}</p>
+          </div>
+        ))}
       </div>
       <div style={{borderRadius:16,padding:"14px 18px",background:"linear-gradient(135deg,#6366f1,#3b82f6)",color:"#fff"}}>
         <p style={{fontSize:11,fontWeight:700,margin:"0 0 4px",opacity:.85,textTransform:"uppercase",letterSpacing:".06em"}}>Reference</p>
@@ -867,6 +972,7 @@ export default function App(){
 
   return(
     <div style={{minHeight:"100vh",background:dark?"#0f172a":"linear-gradient(135deg,#f8faff,#eef2ff,#eff6ff)",transition:"background .3s"}}>
+      {showGlossary&&<GlossaryModal dark={dark} onClose={()=>setShowGlossary(false)}/>}
       <style>{`
         @keyframes slideR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
         @keyframes slideL{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
