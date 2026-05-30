@@ -438,12 +438,12 @@ const QS={
   pred_dv_type:{title:"What type is your outcome (dependent) variable?",sub:"The variable you want to predict",Icon:Target,key:"predDvType",opts:[{id:"continuous",label:"Continuous",desc:"Numeric outcome — score, time, measurement",emoji:"📏",tip:"continuous"},{id:"binary",label:"Binary / Dichotomous",desc:"Two categories — pass/fail, recovered/not recovered",emoji:"🔘",tip:"binary"},{id:"categorical",label:"Categorical (3+ unordered categories)",desc:"Multiple groups — e.g. which therapy type chosen",emoji:"🗂️",tip:"categorical"}]},
   pred_iv_count:{title:"How many predictor variables do you have?",sub:"Independent variables entering your model",Icon:BookOpen,key:"predIvCount",opts:[{id:"one",label:"One predictor",desc:"A single independent variable in the model",emoji:"1️⃣"},{id:"multiple",label:"Two or more predictors",desc:"Multiple IVs examined simultaneously",emoji:"🔢"}]},
   norm_n:{title:"How many participants per group? (or total sample for correlations)",sub:"Larger samples help via the Central Limit Theorem — but always check for severe skew regardless",Icon:Users,key:"normN",opts:[{id:"under30",label:"Fewer than 30",desc:"Small sample — normality matters more here",emoji:"🔍"},{id:"n30_100",label:"30 to 100",desc:"Medium sample — CLT helps, but check for clear skew",emoji:"📊"},{id:"over100",label:"More than 100",desc:"Large sample — CLT applies strongly; parametric tests are robust",emoji:"📦"}]},
-  norm_check:{title:"How did you assess normality?",sub:"Most psychology data isn't perfectly normal — here's how to decide what to do",Icon:Zap,key:"normCheck",opts:[{id:"shapiro",label:"Shapiro-Wilk test",desc:"Statistical significance test for normality",emoji:"🔬",tip:"normality"},{id:"qqplot",label:"Q-Q plot",desc:"Visual — points should follow the diagonal line",emoji:"📈"},{id:"histogram",label:"Histogram",desc:"Visual — should look roughly bell-shaped",emoji:"📊"},{id:"notchecked",label:"Haven't checked yet",desc:"That's okay — tell us what you see or expect",emoji:"❓"}]},
+  norm_check:{title:"How did you assess normality?",sub:"Most psychology data isn't perfectly normal — here's how to decide what to do",Icon:Zap,key:"normCheck",opts:[{id:"shapiro",label:"Shapiro-Wilk test",desc:"Statistical significance test for normality",emoji:"🔬",tip:"normality"},{id:"qqplot",label:"Q-Q plot",desc:"Visual — points should follow the diagonal line",emoji:"📈"},{id:"histogram",label:"Histogram",desc:"Visual — should look roughly bell-shaped",emoji:"📊"},{id:"all",label:"I used all three methods",desc:"Shapiro-Wilk + Q-Q plot + histogram — best practice",emoji:"🧪"},{id:"notchecked",label:"Haven't checked yet",desc:"That's okay — tell us what you see or expect",emoji:"❓"}]},
   norm_result:{title:"What does your data look like?",sub:"Be as honest as you can — if you're unsure, we'll show you both options",Icon:BarChart2,key:"normResult",opts:[{id:"normal",label:"Clearly normal",desc:"Bell-shaped, symmetric — Q-Q plot points follow the diagonal closely",emoji:"🔔"},{id:"nonnormal",label:"Skewed or non-normal",desc:"Clear skew, outliers, non-symmetric histogram, or normality test failed",emoji:"↗️"},{id:"unsure",label:"I'm not sure — or my result was unclear",desc:"Haven't checked yet, or calculated but unsure how to interpret — we'll show you both paths",emoji:"🤔"}]},
 };
 
 const QID_TO_KEY={objective:"objective",assoc_type:"assocType",cell_size:"cellSize",groups:"groups",design:"design",dv_type:"dvType",likert_type:"likertType",rel_type:"relType",pred_dv_type:"predDvType",pred_iv_count:"predIvCount",norm_n:"normN",norm_check:"normCheck",norm_result:"normResult"};
-const CM={objective:{compare:"Group comparison",relationship:"Relationship",predict:"Prediction",association:"Categorical assoc."},assocType:{nominal:"Nominal vars",ordinal:"Ordinal vars"},cellSize:{adequate:"Cells ≥5",small:"Small cells"},groups:{"2":"2 groups","3plus":"3+ groups"},design:{independent:"Independent",paired:"Paired",repeated:"Repeated"},dvType:{continuous:"Continuous DV",ordinal:"Ordinal DV",likert:"Likert DV",binary:"Binary DV",categorical:"Categorical DV"},likertType:{single:"Single item",multi:"Multi-item scale"},relType:{two_continuous:"2 continuous vars",two_ordinal:"2 ordinal vars",cont_binary:"Continuous×binary",mediation:"Mediation/Moderation"},predDvType:{continuous:"Continuous outcome",binary:"Binary outcome",categorical:"Categorical outcome"},predIvCount:{one:"1 predictor",multiple:"Multiple predictors"},normN:{under30:"n<30",n30_100:"n=30–100",over100:"n>100"},normCheck:{shapiro:"Shapiro-Wilk",qqplot:"Q-Q plot",histogram:"Histogram",notchecked:"Not checked"},normResult:{normal:"Normal",nonnormal:"Non-normal",unsure:"Unsure"}};
+const CM={objective:{compare:"Group comparison",relationship:"Relationship",predict:"Prediction",association:"Categorical assoc."},assocType:{nominal:"Nominal vars",ordinal:"Ordinal vars"},cellSize:{adequate:"Cells ≥5",small:"Small cells"},groups:{"2":"2 groups","3plus":"3+ groups"},design:{independent:"Independent",paired:"Paired",repeated:"Repeated"},dvType:{continuous:"Continuous DV",ordinal:"Ordinal DV",likert:"Likert DV",binary:"Binary DV",categorical:"Categorical DV"},likertType:{single:"Single item",multi:"Multi-item scale"},relType:{two_continuous:"2 continuous vars",two_ordinal:"2 ordinal vars",cont_binary:"Continuous×binary",mediation:"Mediation/Moderation"},predDvType:{continuous:"Continuous outcome",binary:"Binary outcome",categorical:"Categorical outcome"},predIvCount:{one:"1 predictor",multiple:"Multiple predictors"},normN:{under30:"n<30",n30_100:"n=30–100",over100:"n>100"},normCheck:{shapiro:"Shapiro-Wilk",qqplot:"Q-Q plot",histogram:"Histogram",all:"All 3 methods",notchecked:"Not checked"},normResult:{normal:"Normal",nonnormal:"Non-normal",unsure:"Unsure"}};
 
 function methodsParagraph(a,normChoice){
   const effAns=normChoice?{...a,normResult:normChoice}:a;
@@ -461,17 +461,85 @@ function methodsParagraph(a,normChoice){
   return s;
 }
 
-function HistoGuide({dark}){
-  const histos=[{label:"Clearly normal",bars:[1,3,6,10,13,13,10,6,3,1]},{label:"Mildly skewed",bars:[2,4,7,11,12,11,8,5,2,1]},{label:"Right-skewed",bars:[13,11,8,6,4,3,2,1,1,1]},{label:"Left-skewed",bars:[1,1,1,2,3,4,6,8,11,13]}];
+function HistoGuide({dark,normCheck}){
+  const histos=[
+    {label:"Normal ✅",bars:[1,3,6,10,13,13,10,6,3,1],col:"#22c55e"},
+    {label:"Right-skewed ❌",bars:[13,11,8,6,4,3,2,1,1,1],col:"#ef4444"},
+    {label:"Left-skewed ❌",bars:[1,1,1,2,3,4,6,8,11,13],col:"#ef4444"},
+    {label:"Bimodal ❌",bars:[2,6,11,7,3,3,7,11,6,2],col:"#f59e0b"},
+  ];
+  const tx2=dark?"#94a3b8":"#475569";
   const tx3=dark?"#64748b":"#94a3b8";
-  return(<div style={{marginBottom:14,padding:"12px 14px",borderRadius:12,background:dark?"rgba(99,102,241,.08)":"#f5f3ff",border:`1px solid ${dark?"rgba(99,102,241,.2)":"#ddd6fe"}`}}>
-    <p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:dark?"#a5b4fc":"#4f46e5",margin:"0 0 10px"}}>Distribution shape guide — compare with your histogram or Q-Q plot</p>
-    <div style={{display:"flex",gap:8,justifyContent:"space-around",flexWrap:"wrap"}}>
-      {histos.map(({label,bars})=>{const max=Math.max(...bars);return(<div key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-        <svg width="52" height="32" viewBox="0 0 52 32">{bars.map((h,i)=><rect key={i} x={i*5.2} y={32-(h/max)*28} width="4.5" height={(h/max)*28} fill="#6366f1" opacity={dark?.65:.45} rx="1"/>)}</svg>
-        <span style={{fontSize:9.5,fontWeight:500,color:tx3,textAlign:"center",maxWidth:52}}>{label}</span>
-      </div>);})}
+  const guides={
+    shapiro:[
+      {icon:"✅",label:"p > .05",text:'Fail to reject normality — treat as normal. Report: "Shapiro-Wilk test indicated normality was not violated, W=___, p=.___"'},
+      {icon:"⚠️",label:"p < .05 with n < 50",text:'Likely genuinely non-normal. Use non-parametric. Report: "The Shapiro-Wilk test indicated a significant departure from normality, W=___, p=.___, therefore a non-parametric test was used."'},
+      {icon:"⚠️",label:"p < .05 with n > 50",text:"Shapiro-Wilk is oversensitive with large samples — even trivial deviations become significant. Check your Q-Q plot instead. If points follow the diagonal, data is likely fine for parametric tests."},
+    ],
+    qqplot:[
+      {icon:"✅",label:"Points hug the diagonal",text:'Data is approximately normal. Report: "Visual inspection of the Q-Q plot indicated that residuals were approximately normally distributed."'},
+      {icon:"❌",label:"Points curve away (S-shape or arc)",text:'Non-normal — an S-curve suggests skew; an arc suggests kurtosis. Report: "Q-Q plot inspection revealed a departure from normality, therefore a non-parametric test was selected."'},
+      {icon:"⚠️",label:"Only end-points drift",text:"Minor end-point drift is common and usually acceptable, especially with n>30. If the central portion follows the diagonal, parametric tests are likely fine."},
+    ],
+    histogram:[
+      {icon:"✅",label:"Bell-shaped and symmetric",text:'Approximately normal. Report: "Histogram inspection suggested an approximately normal distribution."'},
+      {icon:"❌",label:"Clear skew or multiple peaks",text:'Non-normal. Report: "Histogram inspection revealed a non-normal distribution, therefore a non-parametric test was used."'},
+      {icon:"⚠️",label:"Unsure or irregular shape",text:"Histograms can be misleading with small samples. Combine with a Q-Q plot or Shapiro-Wilk for more confidence before deciding."},
+    ],
+    all:[
+      {icon:"🥇",label:"All three agree: normal",text:'High confidence — use parametric. Report both methods together: "Normality was assessed via Shapiro-Wilk test (W=___, p=.___) and visual inspection of Q-Q plots and histograms. Data appeared approximately normally distributed."'},
+      {icon:"🔴",label:"All three agree: non-normal",text:'Clear non-normality — use non-parametric. Report: "Normality was assessed via Shapiro-Wilk test, Q-Q plots, and histogram inspection. Results consistently indicated a departure from normality, therefore a non-parametric test was used."'},
+      {icon:"⚠️",label:"Methods disagree — priority order",text:"This is common! Prioritise: (1) Q-Q plot with n>30 — the most practical visual method; (2) Shapiro-Wilk only if n<50; (3) ignore Shapiro-Wilk if n>100. If still unsure, choose non-parametric — minimal power cost and avoids assumption violations."},
+    ],
+  };
+  const guide=guides[normCheck]||null;
+  return(<div style={{marginBottom:14,display:"flex",flexDirection:"column",gap:10}}>
+    <div style={{padding:"12px 14px",borderRadius:12,background:dark?"rgba(99,102,241,.08)":"#f5f3ff",border:`1px solid ${dark?"rgba(99,102,241,.2)":"#ddd6fe"}`}}>
+      <p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:dark?"#a5b4fc":"#4f46e5",margin:"0 0 10px"}}>Histogram shape guide — what does yours look like?</p>
+      <div style={{display:"flex",gap:8,justifyContent:"space-around",flexWrap:"wrap"}}>
+        {histos.map(({label,bars,col})=>{const max=Math.max(...bars);return(<div key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+          <svg width="52" height="32" viewBox="0 0 52 32">{bars.map((h,i)=><rect key={i} x={i*5.2} y={32-(h/max)*28} width="4.5" height={(h/max)*28} fill={col} opacity={dark?.7:.5} rx="1"/>)}</svg>
+          <span style={{fontSize:9.5,fontWeight:600,color:col,textAlign:"center",maxWidth:60}}>{label}</span>
+        </div>);})}
+      </div>
+      <div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${dark?"rgba(255,255,255,.08)":"rgba(0,0,0,.06)"}`}}>
+        <p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:dark?"#a5b4fc":"#4f46e5",margin:"0 0 7px"}}>Q-Q plot guide — what to look for</p>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"space-around"}}>
+          {[
+            {label:"Normal ✅",desc:"Points follow diagonal closely",col:"#22c55e"},
+            {label:"Skewed ❌",desc:"Points curve away in S-shape",col:"#ef4444"},
+            {label:"Heavy tails ⚠️",desc:"End-points drift off line only",col:"#f59e0b"},
+          ].map(({label,desc,col})=>(
+            <div key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flex:"1 1 80px"}}>
+              <svg width="52" height="32" viewBox="0 0 52 32">
+                <line x1="4" y1="28" x2="48" y2="4" stroke={dark?"#475569":"#cbd5e1"} strokeWidth="1.5" strokeDasharray="3,2"/>
+                {col==="#22c55e"&&[{x:6,y:26},{x:15,y:21},{x:26,y:16},{x:37,y:11},{x:46,y:6}].map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="2.5" fill={col} opacity=".8"/>)}
+                {col==="#ef4444"&&[{x:6,y:22},{x:15,y:22},{x:26,y:16},{x:37,y:10},{x:46,y:10}].map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="2.5" fill={col} opacity=".8"/>)}
+                {col==="#f59e0b"&&[{x:6,y:23},{x:15,y:21},{x:26,y:16},{x:37,y:11},{x:46,y:9}].map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="2.5" fill={col} opacity=".8"/>)}
+              </svg>
+              <span style={{fontSize:9.5,fontWeight:600,color:col,textAlign:"center"}}>{label}</span>
+              <span style={{fontSize:9,color:tx3,textAlign:"center",maxWidth:80,lineHeight:1.3}}>{desc}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
+    {guide&&<div style={{padding:"12px 14px",borderRadius:12,background:dark?"rgba(251,191,36,.06)":"#fefce8",border:`1px solid ${dark?"rgba(251,191,36,.2)":"#fde68a"}`}}>
+      <p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:dark?"#fbbf24":"#92400e",margin:"0 0 8px"}}>
+        📋 How to interpret &amp; report — {normCheck==="all"?"using all three methods":normCheck==="shapiro"?"Shapiro-Wilk":normCheck==="qqplot"?"Q-Q plot":"histogram"}
+      </p>
+      <div style={{display:"flex",flexDirection:"column",gap:7}}>
+        {guide.map(({icon,label,text},i)=>(
+          <div key={i} style={{padding:"8px 10px",borderRadius:9,background:dark?"rgba(0,0,0,.2)":"rgba(255,255,255,.7)"}}>
+            <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}>
+              <span style={{fontSize:12}}>{icon}</span>
+              <span style={{fontSize:11,fontWeight:700,color:dark?"#fde68a":"#78350f"}}>{label}</span>
+            </div>
+            <p style={{fontSize:11.5,color:tx2,margin:0,lineHeight:1.6}}>{text}</p>
+          </div>
+        ))}
+      </div>
+    </div>}
   </div>);}
 
 function Tip({term,dark}){
@@ -686,7 +754,7 @@ function Question({qId,ans,onAns,onNext,onPrev,isFirst,animDir,dark}){
         <div style={{padding:9,borderRadius:11,flexShrink:0,background:dark?"rgba(99,102,241,.15)":"#eef2ff",color:dark?"#818cf8":"#4f46e5"}}><Icon size={17}/></div>
         <div><h2 style={{margin:0,fontSize:15.5,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",lineHeight:1.3}}>{q.title}</h2><p style={{margin:"3px 0 0",fontSize:11,color:tx3}}>{q.sub}</p></div>
       </div>
-      {qId==="norm_result"&&<HistoGuide dark={dark}/>}
+      {qId==="norm_result"&&<HistoGuide dark={dark} normCheck={ans.normCheck}/>}
       {q.info&&<div style={{marginBottom:14,padding:"10px 12px",borderRadius:12,background:dark?"rgba(99,102,241,.1)":"#f5f3ff",border:`1px solid ${dark?"rgba(99,102,241,.25)":"#ddd6fe"}`}}><p style={{fontSize:12,lineHeight:1.6,color:dark?"#c4b5fd":"#5b21b6",margin:0,whiteSpace:"pre-line"}}>💡 {q.info}</p></div>}
       {swWarn&&<div style={{marginBottom:14,padding:"10px 12px",borderRadius:12,background:dark?"rgba(251,191,36,.08)":"#fefce8",border:`1px solid ${dark?"rgba(251,191,36,.2)":"#fde68a"}`}}><p style={{fontSize:12,lineHeight:1.6,color:dark?"#fbbf24":"#92400e",margin:0}}>⚠️ Shapiro-Wilk is oversensitive with n&gt;100 — trivial deviations may be flagged. Consider selecting "I'm not sure" to see both pathways, or verify with a Q-Q plot first.</p></div>}
       <div style={{display:"flex",flexDirection:"column",gap:7}}>{q.opts.map(o=><Opt key={o.id} o={o} sel={sel===o.id} onSel={v=>onAns(q.key,v)} dark={dark}/>)}</div>
