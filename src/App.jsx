@@ -717,33 +717,127 @@ export default function App(){
   };
   const reset=()=>{setAns({});setHist(["objective"]);go("forward","objective");};
   const progress=cQ==="result"?100:Math.min(90,Math.round((hist.length/10)*100));
-  const tx1=dark?"#f1f5f9":"#0f172a",tx3=dark?"#64748b":"#94a3b8";
-  return(<div style={{minHeight:"100vh",background:dark?"#0f172a":"linear-gradient(135deg,#f8faff,#eef2ff,#eff6ff)",transition:"background .3s",padding:"20px 16px 40px"}}>
-    <style>{`@keyframes slideR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}@keyframes slideL{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}`}</style>
-    <div style={{maxWidth:540,margin:"0 auto"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
-        <div>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
-            <div style={{width:30,height:30,borderRadius:9,background:"linear-gradient(135deg,#6366f1,#3b82f6)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 3px 10px rgba(99,102,241,.4)"}}><BarChart2 size={14} color="#fff"/></div>
-            <span style={{fontSize:17,fontWeight:800,color:tx1}}>Stat<span style={{color:"#6366f1"}}>Test</span></span>
-            <span style={{fontSize:10,padding:"2px 8px",borderRadius:999,fontWeight:700,letterSpacing:".06em",background:dark?"rgba(99,102,241,.2)":"#eef2ff",color:dark?"#818cf8":"#4f46e5"}}>SELECTOR</span>
-          </div>
-          <p style={{margin:0,fontSize:11,color:tx3,paddingLeft:38}}>For psychology &amp; social science students</p>
+  const tx1=dark?"#f1f5f9":"#0f172a",tx3=dark?"#64748b":"#94a3b8",tx2=dark?"#94a3b8":"#475569";
+
+  // Shared header + progress used in both layouts
+  const Header=(
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20}}>
+      <div>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+          <div style={{width:30,height:30,borderRadius:9,background:"linear-gradient(135deg,#6366f1,#3b82f6)",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 3px 10px rgba(99,102,241,.4)"}}><BarChart2 size={14} color="#fff"/></div>
+          <span style={{fontSize:17,fontWeight:800,color:tx1}}>Stat<span style={{color:"#6366f1"}}>Test</span></span>
+          <span style={{fontSize:10,padding:"2px 8px",borderRadius:999,fontWeight:700,letterSpacing:".06em",background:dark?"rgba(99,102,241,.2)":"#eef2ff",color:dark?"#818cf8":"#4f46e5"}}>SELECTOR</span>
         </div>
-        <div style={{display:"flex",gap:4}}>
-          <button onClick={reset} style={{padding:7,borderRadius:10,background:"none",border:"none",cursor:"pointer",color:tx3}} title="Reset"><RotateCcw size={14}/></button>
-          <button onClick={()=>setDark(d=>!d)} style={{padding:7,borderRadius:10,background:"none",border:"none",cursor:"pointer",color:dark?"#fbbf24":tx3}} title="Toggle dark mode">{dark?<Sun size={14}/>:<Moon size={14}/>}</button>
-        </div>
+        <p style={{margin:0,fontSize:11,color:tx3,paddingLeft:38}}>For psychology &amp; social science students</p>
       </div>
-      <div style={{marginBottom:16}}>
-        <div style={{height:5,borderRadius:99,background:dark?"#334155":"#e2e8f0",overflow:"hidden"}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,#6366f1,#3b82f6)",width:`${progress}%`,transition:"width .7s ease-out"}}/></div>
-        <div style={{display:"flex",justifyContent:"space-between",marginTop:5,fontSize:11,color:tx3}}><span>Step {hist.length}</span><span>{progress}% complete</span></div>
+      <div style={{display:"flex",gap:4}}>
+        <button onClick={reset} style={{padding:7,borderRadius:10,background:"none",border:"none",cursor:"pointer",color:tx3}} title="Reset"><RotateCcw size={14}/></button>
+        <button onClick={()=>setDark(d=>!d)} style={{padding:7,borderRadius:10,background:"none",border:"none",cursor:"pointer",color:dark?"#fbbf24":tx3}} title="Toggle dark mode">{dark?<Sun size={14}/>:<Moon size={14}/>}</button>
       </div>
-      {hist.length>1&&<Crumb hist={hist} ans={ans} dark={dark} onJump={handleJump}/>}
+    </div>
+  );
+
+  const ProgressBar=(
+    <div style={{marginBottom:16}}>
+      <div style={{height:5,borderRadius:99,background:dark?"#334155":"#e2e8f0",overflow:"hidden"}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,#6366f1,#3b82f6)",width:`${progress}%`,transition:"width .7s ease-out"}}/></div>
+      <div style={{display:"flex",justifyContent:"space-between",marginTop:5,fontSize:11,color:tx3}}><span>Step {hist.length}</span><span>{progress}% complete</span></div>
+    </div>
+  );
+
+  const MainContent=(
+    <>
       {cQ==="result"
         ?<Result key={aKey} ans={ans} dark={dark} onReset={reset} hist={hist} onJump={handleJump}/>
         :<Question key={aKey} qId={cQ} ans={ans} onAns={(k,v)=>setAns(a=>({...a,[k]:v}))} onNext={handleNext} onPrev={handlePrev} isFirst={hist.length===1} animDir={aDir} dark={dark}/>
       }
       <p style={{textAlign:"center",fontSize:11,color:dark?"#475569":"#cbd5e1",marginTop:20}}>Based on APA &amp; Field (2018) statistical guidelines</p>
+    </>
+  );
+
+  // Desktop sidebar content — test library overview
+  const DesktopSidebar=(
+    <div style={{width:280,flexShrink:0,display:"flex",flexDirection:"column",gap:12}}>
+      <div style={{borderRadius:16,padding:"16px 18px",background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 2px 12px rgba(0,0,0,.05)"}}>
+        <p style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:dark?"#818cf8":"#6366f1",margin:"0 0 12px"}}>📚 Test Library</p>
+        {[
+          {cat:"Parametric",col:"#6366f1",bg:dark?"rgba(99,102,241,.12)":"#eef2ff",tests:["Welch's t-Test","Paired t-Test","One-Way ANOVA","Repeated Measures ANOVA","Pearson r","Simple Regression","Multiple Regression","Logistic Regression"]},
+          {cat:"Non-Parametric",col:"#16a34a",bg:dark?"rgba(34,197,94,.1)":"#f0fdf4",tests:["Mann-Whitney U","Wilcoxon Signed-Rank","Kruskal-Wallis","Friedman Test","Spearman ρ","Kendall's τ-b","Chi-Square","Fisher's Exact","McNemar's","Cochran's Q"]},
+          {cat:"Advanced",col:"#7c3aed",bg:dark?"rgba(139,92,246,.1)":"#f5f3ff",tests:["Mediation / Moderation","Point-Biserial r","Multinomial Logistic"]},
+        ].map(({cat,col,bg,tests})=>(
+          <div key={cat} style={{marginBottom:10}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
+              <span style={{width:8,height:8,borderRadius:"50%",background:col,flexShrink:0,display:"inline-block"}}/>
+              <span style={{fontSize:10,fontWeight:700,color:col,textTransform:"uppercase",letterSpacing:".06em"}}>{cat}</span>
+            </div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:"3px 4px"}}>
+              {tests.map(t=><span key={t} style={{fontSize:10.5,padding:"2px 7px",borderRadius:6,background:bg,color:col,fontWeight:500}}>{t}</span>)}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{borderRadius:16,padding:"16px 18px",background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 2px 12px rgba(0,0,0,.05)"}}>
+        <p style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:dark?"#818cf8":"#6366f1",margin:"0 0 10px"}}>💡 Quick Tips</p>
+        {[
+          ["Normality","Check residuals AFTER running the model — not raw data."],
+          ["Effect Size","Always report alongside p-values. p alone is not enough."],
+          ["Post-hoc","Required after significant ANOVA / Kruskal-Wallis."],
+          ["Power","Aim for .80 minimum; .90 is increasingly expected."],
+          ["APA Style","Never write 'proves' — use 'suggests' or 'indicates'."],
+        ].map(([t,d])=>(
+          <div key={t} style={{marginBottom:8,paddingBottom:8,borderBottom:dark?"1px solid #1e293b":"1px solid #f1f5f9"}}>
+            <p style={{fontSize:11,fontWeight:700,color:dark?"#e2e8f0":"#1e293b",margin:"0 0 2px"}}>{t}</p>
+            <p style={{fontSize:11,color:tx2,margin:0,lineHeight:1.5}}>{d}</p>
+          </div>
+        ))}
+      </div>
+      <div style={{borderRadius:16,padding:"14px 18px",background:"linear-gradient(135deg,#6366f1,#3b82f6)",color:"#fff"}}>
+        <p style={{fontSize:11,fontWeight:700,margin:"0 0 4px",opacity:.85,textTransform:"uppercase",letterSpacing:".06em"}}>Reference</p>
+        <p style={{fontSize:11.5,margin:0,lineHeight:1.6,opacity:.9}}>Field, A. (2018). <em>Discovering Statistics Using IBM SPSS Statistics</em> (5th ed.). SAGE.</p>
+      </div>
     </div>
-  </div>);}
+  );
+
+  return(
+    <div style={{minHeight:"100vh",background:dark?"#0f172a":"linear-gradient(135deg,#f8faff,#eef2ff,#eff6ff)",transition:"background .3s"}}>
+      <style>{`
+        @keyframes slideR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+        @keyframes slideL{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+        @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+        .desktop-layout{display:none}
+        .mobile-layout{display:block}
+        @media(min-width:900px){
+          .desktop-layout{display:flex}
+          .mobile-layout{display:none}
+        }
+      `}</style>
+
+      {/* ── MOBILE layout (unchanged) ── */}
+      <div className="mobile-layout" style={{padding:"20px 16px 40px"}}>
+        <div style={{maxWidth:540,margin:"0 auto"}}>
+          {Header}
+          {ProgressBar}
+          {MainContent}
+        </div>
+      </div>
+
+      {/* ── DESKTOP layout ── */}
+      <div className="desktop-layout" style={{minHeight:"100vh",flexDirection:"column",padding:"28px 40px 40px"}}>
+        {/* Top bar — full width */}
+        <div style={{marginBottom:20}}>
+          {Header}
+          {ProgressBar}
+        </div>
+        {/* Two-column body */}
+        <div style={{display:"flex",gap:28,alignItems:"flex-start",flex:1}}>
+          {/* Left sidebar */}
+          {DesktopSidebar}
+          {/* Main panel */}
+          <div style={{flex:1,minWidth:0,maxWidth:680}}>
+            {MainContent}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
