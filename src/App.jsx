@@ -485,19 +485,152 @@ function nextQ(q,a){
 }
 
 const QS={
-  objective:{title:"What are you trying to find out?",sub:"Pick the option that best matches your research question",Icon:Target,key:"objective",opts:[{id:"compare",label:"Are two or more groups different from each other?",desc:'e.g. "Do hostel students have higher stress than day scholars?"',emoji:"⚖️"},{id:"relationship",label:"Is there a relationship between two variables?",desc:'e.g. "Is social media use related to loneliness?"',emoji:"🔗"},{id:"predict",label:"Can one or more variables predict another?",desc:'e.g. "Can attendance predict exam performance?"',emoji:"🎯"},{id:"association",label:"Are two categories linked to each other?",desc:'e.g. "Is gender linked to career choice?"',emoji:"🔲"}]},
-  assoc_type:{title:"What level of measurement are your two variables?",sub:"This determines which association test is most appropriate",Icon:BarChart2,key:"assocType",opts:[{id:"nominal",label:"Both nominal — unordered categories",desc:"e.g. gender × treatment type, diagnosis × therapy preference",emoji:"🗂️"},{id:"ordinal",label:"One or both are ordinal — ordered or ranked",desc:"e.g. education level, agreement scale, ranked preferences",emoji:"🏷️",tip:"ordinal"}]},
-  cell_size:{title:"Do you expect any cells to have fewer than 5 observations?",sub:"Chi-square becomes unreliable with very small expected cell counts",info:"Estimate expected counts: (row total × column total) ÷ grand total. If any cell is likely <5, Fisher's Exact Test is more appropriate — very common in small psychology studies.",Icon:AlertTriangle,key:"cellSize",opts:[{id:"adequate",label:"No — all expected cells should have ≥5 observations",desc:"Chi-square is appropriate for your sample size",emoji:"✅"},{id:"small",label:"Yes — some cells may have fewer than 5",desc:"Common with n<40 or very unequal group sizes",emoji:"⚠️"}]},
-  groups:{title:"How many groups are you comparing?",sub:"Count the distinct categories or conditions in your study",Icon:Users,key:"groups",opts:[{id:"2",label:"Two groups",desc:"e.g. male vs female, experimental vs control, first year vs final year",emoji:"2️⃣"},{id:"3plus",label:"Three or more groups",desc:"e.g. three teaching methods, four departments, five year groups",emoji:"3️⃣"}]},
-  design:{title:"Are the same people in all your groups, or different people?",sub:"This is one of the most important decisions in choosing your statistical test",Icon:GitBranch,key:"design",opts:[{id:"independent",label:"Different people in each group",desc:"Each participant appears in one group only — between-subjects design",emoji:"👥",tip:"independent samples"},{id:"paired",label:"The same people measured twice (before and after)",desc:"Same participants at exactly two time points — pre-test and post-test",emoji:"🔄",tip:"paired samples"},{id:"repeated",label:"The same people measured three or more times",desc:"Same participants across 3 or more conditions or time points",emoji:"🔁",tip:"repeated measures"}]},
-  dv_type:{title:"What kind of data is your outcome — the thing you are measuring?",sub:"Your outcome (dependent variable) is the variable you expect might change",Icon:BarChart2,key:"dvType",opts:[{id:"continuous",label:"A number — scores, times, measurements, percentages",desc:"e.g. exam score, reaction time, height, anxiety score on a validated scale",emoji:"📏",tip:"continuous"},{id:"ordinal",label:"Ordered ratings — but the gaps between values are unequal",desc:"e.g. ranked preference (1st, 2nd, 3rd), position in class",emoji:"🏷️",tip:"ordinal"},{id:"likert",label:"A rating scale — e.g. 1 to 5 or 1 to 7",desc:"e.g. 'How stressed are you?' rated 1 (not at all) to 5 (extremely)",emoji:"⭐"},{id:"binary",label:"A yes/no or two-category outcome",desc:"e.g. pass/fail, present/absent, diagnosed/not diagnosed",emoji:"🔘",tip:"binary"},{id:"categorical",label:"Three or more categories with no natural order",desc:"e.g. preferred counselling type, chosen stream, nationality",emoji:"🗂️",tip:"categorical"}]},
-  likert_type:{title:"Is this a single question or a full questionnaire with multiple items?",sub:"This changes which statistical approach is most appropriate",info:"Single question (e.g. 'Rate your stress from 1–5') → treat as ordinal → use non-parametric test.\n\nFull questionnaire (e.g. PSS-10, BDI-II, DASS-21 — items added or averaged) → if n>30, treat as continuous → parametric is acceptable.\n\n⚠️ Before your main analysis, always report Cronbach's alpha to confirm your scale is reliable (α > .70 is acceptable).",Icon:Lightbulb,key:"likertType",opts:[{id:"single",label:"A single rating question",desc:"One question only — e.g. 'How would you rate your overall happiness from 1–7?'",emoji:"1️⃣"},{id:"multi",label:"A questionnaire with multiple items added or averaged together",desc:"e.g. PSS (Perceived Stress Scale), BDI (Beck Depression Inventory), DASS-21",emoji:"📋",tip:"composite scale"}]},
-  rel_type:{title:"What kind of relationship are you examining?",sub:"Choose the analysis that best fits your question",Icon:TrendingUp,key:"relType",opts:[{id:"two_continuous",label:"Correlation — two continuous variables",desc:'"How does sleep duration relate to cognitive performance?"',emoji:"📉"},{id:"two_ordinal",label:"Correlation — two ordinal or ranked variables",desc:'"Does education level relate to treatment preference?"',emoji:"🏷️",tip:"kendall"},{id:"cont_binary",label:"Correlation — continuous variable and a binary variable",desc:'"Does reaction time relate to diagnosis status (yes/no)?"',emoji:"⚡"},{id:"mediation",label:"Mediation or moderation analysis",desc:'"Does self-efficacy explain the stress–performance link?" — requires causal theory',emoji:"🔀",tip:"mediation"}]},
-  pred_dv_type:{title:"What type is your outcome (dependent) variable?",sub:"The variable you want to predict",Icon:Target,key:"predDvType",opts:[{id:"continuous",label:"Continuous",desc:"Numeric outcome — score, time, measurement",emoji:"📏",tip:"continuous"},{id:"binary",label:"Binary / Dichotomous",desc:"Two categories — pass/fail, recovered/not recovered",emoji:"🔘",tip:"binary"},{id:"categorical",label:"Categorical (3+ unordered categories)",desc:"Multiple groups — e.g. which therapy type chosen",emoji:"🗂️",tip:"categorical"}]},
-  pred_iv_count:{title:"How many predictor variables do you have?",sub:"Independent variables entering your model",Icon:BookOpen,key:"predIvCount",opts:[{id:"one",label:"One predictor",desc:"A single independent variable in the model",emoji:"1️⃣"},{id:"multiple",label:"Two or more predictors",desc:"Multiple IVs examined simultaneously",emoji:"🔢"}]},
-  norm_n:{title:"How many participants do you have per group?",sub:"Sample size affects how important normality checking is for your analysis",Icon:Users,key:"normN",opts:[{id:"under30",label:"Fewer than 30 per group",desc:"Small sample — normality is more important to check carefully here",emoji:"🔍"},{id:"n30_100",label:"30 to 100 per group",desc:"Medium sample — the Central Limit Theorem helps, but check for obvious skew",emoji:"📊"},{id:"over100",label:"More than 100 per group",desc:"Large sample — parametric tests are generally robust even with some skew",emoji:"📦"}]},
-  norm_check:{title:"How did you check whether your data is normally distributed?",sub:"Most psychology data is not perfectly normal — that is completely okay",Icon:Zap,key:"normCheck",opts:[{id:"shapiro",label:"Shapiro-Wilk test (in SPSS: Analyze → Explore → Normality plots)",desc:"A statistical test — p > .05 suggests normality is not violated",emoji:"🔬",tip:"normality"},{id:"qqplot",label:"Q-Q plot (the diagonal line graph in SPSS)",desc:"Visual check — points should follow the diagonal line closely",emoji:"📈"},{id:"histogram",label:"Histogram (a bar chart of your scores)",desc:"Visual check — should look roughly bell-shaped",emoji:"📊"},{id:"all",label:"I used all three methods",desc:"Shapiro-Wilk + Q-Q plot + histogram — this is best practice",emoji:"🧪"},{id:"notchecked",label:"I have not checked yet",desc:"That is okay — describe what you expect based on your data",emoji:"❓"}]},
-  norm_result:{title:"What does your data look like?",sub:"Be as honest as you can — if you are unsure, select the last option and we will show you both paths",Icon:BarChart2,key:"normResult",opts:[{id:"normal",label:"Clearly normal — bell-shaped and symmetric",desc:"Histogram looks like a bell; Q-Q plot points follow the diagonal closely; Shapiro-Wilk p > .05",emoji:"🔔"},{id:"nonnormal",label:"Skewed or non-normal — lopsided or has extreme values",desc:"Clear skew in histogram, Q-Q plot curves away, or Shapiro-Wilk p < .05",emoji:"↗️"},{id:"unsure",label:"I am not sure — my results were mixed or unclear",desc:"Methods disagreed, or you are unsure how to interpret the output — we will show you both options",emoji:"🤔"}]},
+  objective:{
+    title:"What are you trying to find out?",
+    title_expert:"What is your primary research objective?",
+    sub:"Pick the option that best matches your research question",
+    Icon:Target,key:"objective",
+    opts:[
+      {id:"compare",label:"Are two or more groups different from each other?",label_expert:"Compare groups or conditions",desc:'e.g. "Do hostel students have higher stress than day scholars?"',emoji:"⚖️"},
+      {id:"relationship",label:"Is there a relationship between two variables?",label_expert:"Explore a relationship between variables",desc:'e.g. "Is social media use related to loneliness?"',emoji:"🔗"},
+      {id:"predict",label:"Can one or more variables predict another?",label_expert:"Predict an outcome variable",desc:'e.g. "Can attendance predict exam performance?"',emoji:"🎯"},
+      {id:"association",label:"Are two categories linked to each other?",label_expert:"Test association between two categorical variables",desc:'e.g. "Is gender linked to career choice?"',emoji:"🔲"},
+    ]
+  },
+  assoc_type:{
+    title:"What type of data are your two variables?",
+    title_expert:"What level of measurement are your two variables?",
+    sub:"This determines which association test to use",
+    Icon:BarChart2,key:"assocType",
+    opts:[
+      {id:"nominal",label:"Both are categories with no natural order",label_expert:"Both nominal — unordered categories",desc:"e.g. gender, department, religion, type of school",emoji:"🗂️"},
+      {id:"ordinal",label:"One or both have a meaningful order (rankings or ratings)",label_expert:"One or both are ordinal — ordered or ranked",desc:"e.g. education level, ranked preferences, agreement scales",emoji:"🏷️",tip:"ordinal"},
+    ]
+  },
+  cell_size:{
+    title:"Is your sample size small — fewer than 40 participants?",
+    title_expert:"Do you expect any cells to have fewer than 5 observations?",
+    sub:"This affects which test is more accurate for your data",
+    info:"With small samples, some cells in your table may have very few people. If any expected cell count drops below 5, Chi-square becomes unreliable.\n\nQuick check in SPSS: look at the footnote under the Chi-square output — SPSS will warn you automatically.",
+    Icon:AlertTriangle,key:"cellSize",
+    opts:[
+      {id:"adequate",label:"No — I have 40+ participants and groups are roughly equal",label_expert:"No — all expected cells should have ≥5 observations",desc:"Chi-square will work well for your sample",emoji:"✅"},
+      {id:"small",label:"Yes — fewer than 40 participants or very unequal groups",label_expert:"Yes — some cells may have fewer than 5",desc:"Common in student projects with small samples",emoji:"⚠️"},
+    ]
+  },
+  groups:{
+    title:"How many groups are you comparing?",
+    title_expert:"How many groups are you comparing?",
+    sub:"Count the distinct categories or conditions in your study",
+    Icon:Users,key:"groups",
+    opts:[
+      {id:"2",label:"Two groups",label_expert:"Two groups",desc:"e.g. male vs female, experimental vs control, first year vs final year",emoji:"2️⃣"},
+      {id:"3plus",label:"Three or more groups",label_expert:"Three or more groups",desc:"e.g. three teaching methods, four departments, five year groups",emoji:"3️⃣"},
+    ]
+  },
+  design:{
+    title:"Are the same people in all groups, or different people?",
+    title_expert:"What is your study design?",
+    sub:"This is one of the most important decisions in choosing your test",
+    Icon:GitBranch,key:"design",
+    opts:[
+      {id:"independent",label:"Different people in each group — each person is only measured once",label_expert:"Independent samples",desc:"Between-subjects design — each participant is in one group only",emoji:"👥",tip:"independent samples"},
+      {id:"paired",label:"The same people measured twice — before and after",label_expert:"Paired / matched (exactly 2 time points)",desc:"Same participants at exactly two time points — pre-test and post-test",emoji:"🔄",tip:"paired samples"},
+      {id:"repeated",label:"The same people measured three or more times",label_expert:"Repeated measures (3 or more time points)",desc:"Same participants across 3 or more conditions or time points",emoji:"🔁",tip:"repeated measures"},
+    ]
+  },
+  dv_type:{
+    title:"What kind of data is your outcome — the thing you are measuring?",
+    title_expert:"What type is your dependent variable?",
+    sub:"Your outcome is the variable you expect might change",
+    Icon:BarChart2,key:"dvType",
+    opts:[
+      {id:"continuous",label:"A number — scores, times, measurements, percentages",label_expert:"Continuous",desc:"e.g. exam score, reaction time, height, anxiety score on a validated scale",emoji:"📏",tip:"continuous"},
+      {id:"ordinal",label:"Ordered ratings — but the gaps between values are unequal",label_expert:"Ordinal",desc:"e.g. ranked preference (1st, 2nd, 3rd), position in class",emoji:"🏷️",tip:"ordinal"},
+      {id:"likert",label:"A rating scale — e.g. 1 to 5 or 1 to 7",label_expert:"Likert Scale (1–5 or 1–7)",desc:"e.g. 'How stressed are you?' rated 1 (not at all) to 5 (extremely)",emoji:"⭐"},
+      {id:"binary",label:"A yes/no or two-category outcome",label_expert:"Binary",desc:"e.g. pass/fail, present/absent, diagnosed/not diagnosed",emoji:"🔘",tip:"binary"},
+      {id:"categorical",label:"Three or more categories with no natural order",label_expert:"Categorical (3+ unordered groups)",desc:"e.g. preferred counselling type, chosen stream, nationality",emoji:"🗂️",tip:"categorical"},
+    ]
+  },
+  likert_type:{
+    title:"Is this a single question or a full questionnaire?",
+    title_expert:"Is this a single item or a composite scale?",
+    sub:"This changes which statistical approach is most appropriate",
+    info:"Single question (e.g. 'Rate your stress from 1–5') → treat as ordinal → use non-parametric test.\n\nFull questionnaire (e.g. PSS-10, BDI-II, DASS-21 — items added or averaged) → if n>30, treat as continuous → parametric is acceptable.\n\n⚠️ Before your main analysis, always report Cronbach's alpha to confirm your scale is reliable (α > .70 is acceptable).",
+    Icon:Lightbulb,key:"likertType",
+    opts:[
+      {id:"single",label:"A single rating question",label_expert:"Single item",desc:"One question only — e.g. 'How would you rate your overall happiness from 1–7?'",emoji:"1️⃣"},
+      {id:"multi",label:"A questionnaire with multiple items added or averaged",label_expert:"Multi-item composite scale",desc:"e.g. PSS (Perceived Stress Scale), BDI, DASS-21, COPE inventory",emoji:"📋",tip:"composite scale"},
+    ]
+  },
+  rel_type:{
+    title:"What kind of relationship are you looking at?",
+    title_expert:"What kind of relationship are you examining?",
+    sub:"Choose the option that best describes your analysis",
+    Icon:TrendingUp,key:"relType",
+    opts:[
+      {id:"two_continuous",label:"Two numeric variables — e.g. stress score and sleep hours",label_expert:"Correlation — two continuous variables",desc:'"How does study time relate to exam performance?"',emoji:"📉"},
+      {id:"two_ordinal",label:"Two rating scales or ranked variables",label_expert:"Correlation — two ordinal or ranked variables",desc:'"Does education level relate to health awareness rating?"',emoji:"🏷️",tip:"kendall"},
+      {id:"cont_binary",label:"One numeric variable and one yes/no variable",label_expert:"Correlation — continuous variable and a binary variable",desc:'"Is reaction time related to whether someone has ADHD?"',emoji:"⚡"},
+      {id:"mediation",label:"HOW or WHY does one variable affect another?",label_expert:"Mediation or moderation analysis",desc:'"Does self-efficacy explain WHY support affects grades?" — requires a clear theory first',emoji:"🔀",tip:"mediation"},
+    ]
+  },
+  pred_dv_type:{
+    title:"What type of data is the outcome you want to predict?",
+    title_expert:"What type is your outcome (dependent) variable?",
+    sub:"The outcome is the variable you are trying to predict",
+    Icon:Target,key:"predDvType",
+    opts:[
+      {id:"continuous",label:"A number — scores, percentages, measurements",label_expert:"Continuous",desc:"e.g. exam score, GPA, wellbeing rating on a validated scale",emoji:"📏",tip:"continuous"},
+      {id:"binary",label:"A yes/no or two-category outcome",label_expert:"Binary / Dichotomous",desc:"e.g. pass/fail, dropout/retained, clinical/non-clinical",emoji:"🔘",tip:"binary"},
+      {id:"categorical",label:"Three or more categories with no natural order",label_expert:"Categorical (3+ unordered categories)",desc:"e.g. which career path chosen, which therapy type preferred",emoji:"🗂️",tip:"categorical"},
+    ]
+  },
+  pred_iv_count:{
+    title:"How many predictor variables do you have?",
+    title_expert:"How many predictor variables do you have?",
+    sub:"Predictors are the variables you think will explain or predict the outcome",
+    Icon:BookOpen,key:"predIvCount",
+    opts:[
+      {id:"one",label:"One predictor variable",label_expert:"One predictor",desc:"e.g. predicting exam score from study hours only",emoji:"1️⃣"},
+      {id:"multiple",label:"Two or more predictor variables",label_expert:"Two or more predictors",desc:"e.g. predicting exam score from study hours, sleep quality AND stress level",emoji:"🔢"},
+    ]
+  },
+  norm_n:{
+    title:"How many participants do you have per group?",
+    title_expert:"How many participants per group? (or total sample for correlations)",
+    sub:"Sample size affects how important normality checking is",
+    Icon:Users,key:"normN",
+    opts:[
+      {id:"under30",label:"Fewer than 30 per group",label_expert:"Fewer than 30",desc:"Small sample — normality is more important to check carefully here",emoji:"🔍"},
+      {id:"n30_100",label:"30 to 100 per group",label_expert:"30 to 100",desc:"Medium sample — CLT helps, but check for obvious skew",emoji:"📊"},
+      {id:"over100",label:"More than 100 per group",label_expert:"More than 100",desc:"Large sample — parametric tests are generally robust even with some skew",emoji:"📦"},
+    ]
+  },
+  norm_check:{
+    title:"How did you check whether your data is normally distributed?",
+    title_expert:"How did you assess normality?",
+    sub:"Most psychology data is not perfectly normal — that is completely okay",
+    Icon:Zap,key:"normCheck",
+    opts:[
+      {id:"shapiro",label:"Shapiro-Wilk test (in SPSS: Analyze → Explore → Normality plots)",label_expert:"Shapiro-Wilk test",desc:"A statistical test — p > .05 suggests normality is not violated",emoji:"🔬",tip:"normality"},
+      {id:"qqplot",label:"Q-Q plot (the diagonal line graph in SPSS output)",label_expert:"Q-Q plot",desc:"Visual check — points should follow the diagonal line closely",emoji:"📈"},
+      {id:"histogram",label:"Histogram (a bar chart of your scores)",label_expert:"Histogram",desc:"Visual check — should look roughly bell-shaped",emoji:"📊"},
+      {id:"all",label:"I used all three methods",label_expert:"All three methods",desc:"Shapiro-Wilk + Q-Q plot + histogram — this is best practice",emoji:"🧪"},
+      {id:"notchecked",label:"I have not checked yet",label_expert:"Haven't checked yet",desc:"That is okay — describe what you expect based on your data",emoji:"❓"},
+    ]
+  },
+  norm_result:{
+    title:"What does your data look like?",
+    title_expert:"What does your data look like?",
+    sub:"Be as honest as you can — if unsure, select the last option",
+    Icon:BarChart2,key:"normResult",
+    opts:[
+      {id:"normal",label:"Clearly normal — bell-shaped and symmetric",label_expert:"Clearly normal",desc:"Histogram looks like a bell; Q-Q plot points follow the diagonal closely; Shapiro-Wilk p > .05",emoji:"🔔"},
+      {id:"nonnormal",label:"Skewed or non-normal — lopsided or has extreme values",label_expert:"Skewed or non-normal",desc:"Clear skew in histogram, Q-Q plot curves away, or Shapiro-Wilk p < .05",emoji:"↗️"},
+      {id:"unsure",label:"I am not sure — my results were mixed or unclear",label_expert:"I'm not sure",desc:"Methods disagreed, or you are unsure how to interpret the output — we will show you both options",emoji:"🤔"},
+    ]
+  },
 };
 
 const QID_TO_KEY={objective:"objective",assoc_type:"assocType",cell_size:"cellSize",groups:"groups",design:"design",dv_type:"dvType",likert_type:"likertType",rel_type:"relType",pred_dv_type:"predDvType",pred_iv_count:"predIvCount",norm_n:"normN",norm_check:"normCheck",norm_result:"normResult"};
