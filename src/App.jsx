@@ -640,11 +640,11 @@ function Tip({term,dark}){
   const [s,setS]=useState(false);if(!TIPS[term]) return null;
   return(<span style={{position:"relative",display:"inline-flex"}}><button onMouseEnter={()=>setS(true)} onMouseLeave={()=>setS(false)} onClick={e=>{e.stopPropagation();setS(v=>!v)}} style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"#818cf8",lineHeight:1}}><Info size={11}/></button>{s&&<span style={{position:"absolute",bottom:"calc(100% + 4px)",left:0,zIndex:99,width:200,fontSize:11,lineHeight:1.6,borderRadius:10,padding:"8px 10px",background:"#1e293b",color:"#e2e8f0",boxShadow:"0 8px 24px rgba(0,0,0,.25)",pointerEvents:"none"}}>{TIPS[term]}</span>}</span>);}
 
-function Opt({o,sel,onSel,dark}){
+function Opt({o,sel,onSel,dark,beginner=false}){
   return(<button onClick={()=>onSel(o.id)} style={{width:"100%",textAlign:"left",padding:"12px 14px",borderRadius:14,border:sel?"2px solid #6366f1":`1.5px solid ${dark?"#334155":"#e2e8f0"}`,background:sel?(dark?"rgba(99,102,241,.15)":"rgba(99,102,241,.06)"):(dark?"#1e293b":"#fff"),cursor:"pointer",transition:"all .15s",boxShadow:sel?"0 0 0 3px rgba(99,102,241,.15)":"none"}}>
     <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
       <span style={{fontSize:18,lineHeight:1,marginTop:2,flexShrink:0}}>{o.emoji}</span>
-      <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}><span style={{fontWeight:600,fontSize:13,color:sel?(dark?"#a5b4fc":"#4338ca"):(dark?"#f1f5f9":"#1e293b")}}>{o.label}</span>{o.tip&&<Tip term={o.tip} dark={dark}/>}{sel&&<CheckCircle size={12} style={{color:"#6366f1",marginLeft:"auto",flexShrink:0}}/>}</div><p style={{fontSize:11,margin:"2px 0 0",color:dark?"#64748b":"#94a3b8",lineHeight:1.5}}>{o.desc}</p></div>
+      <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}><span style={{fontWeight:600,fontSize:13,color:sel?(dark?"#a5b4fc":"#4338ca"):(dark?"#f1f5f9":"#1e293b")}}>{beginner?(o.label||o.label_expert):(o.label_expert||o.label)}</span>{o.tip&&<Tip term={o.tip} dark={dark}/>}{sel&&<CheckCircle size={12} style={{color:"#6366f1",marginLeft:"auto",flexShrink:0}}/>}</div><p style={{fontSize:11,margin:"2px 0 0",color:dark?"#64748b":"#94a3b8",lineHeight:1.5}}>{o.desc}</p></div>
     </div>
   </button>);}
 
@@ -849,12 +849,12 @@ function Question({qId,ans,onAns,onNext,onPrev,isFirst,animDir,dark,beginner=fal
     <div style={{borderRadius:22,padding:"22px 20px",background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 4px 32px rgba(0,0,0,.07)"}}>
       <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:q.info||swWarn||qId==="norm_result"?12:16}}>
         <div style={{padding:9,borderRadius:11,flexShrink:0,background:dark?"rgba(99,102,241,.15)":"#eef2ff",color:dark?"#818cf8":"#4f46e5"}}><Icon size={17}/></div>
-        <div><h2 style={{margin:0,fontSize:15.5,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",lineHeight:1.3}}>{q.title}</h2><p style={{margin:"3px 0 0",fontSize:11,color:tx3}}>{q.sub}</p></div>
+        <div><h2 style={{margin:0,fontSize:15.5,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",lineHeight:1.3}}>{beginner?(q.title||q.title_expert):(q.title_expert||q.title)}</h2><p style={{margin:"3px 0 0",fontSize:11,color:tx3}}>{q.sub}</p></div>
       </div>
       {qId==="norm_result"&&<HistoGuide dark={dark} normCheck={ans.normCheck}/>}
       {q.info&&<div style={{marginBottom:14,padding:"10px 12px",borderRadius:12,background:dark?"rgba(99,102,241,.1)":"#f5f3ff",border:`1px solid ${dark?"rgba(99,102,241,.25)":"#ddd6fe"}`}}><p style={{fontSize:12,lineHeight:1.6,color:dark?"#c4b5fd":"#5b21b6",margin:0,whiteSpace:"pre-line"}}>💡 {q.info}</p></div>}
       {swWarn&&<div style={{marginBottom:14,padding:"10px 12px",borderRadius:12,background:dark?"rgba(251,191,36,.08)":"#fefce8",border:`1px solid ${dark?"rgba(251,191,36,.2)":"#fde68a"}`}}><p style={{fontSize:12,lineHeight:1.6,color:dark?"#fbbf24":"#92400e",margin:0}}>⚠️ Shapiro-Wilk is oversensitive with n&gt;100 — trivial deviations may be flagged. Consider selecting "I'm not sure" to see both pathways, or verify with a Q-Q plot first.</p></div>}
-      <div style={{display:"flex",flexDirection:"column",gap:7}}>{q.opts.map(o=><Opt key={o.id} o={o} sel={sel===o.id} onSel={v=>onAns(q.key,v)} dark={dark}/>)}</div>
+      <div style={{display:"flex",flexDirection:"column",gap:7}}>{q.opts.map(o=><Opt key={o.id} o={o} sel={sel===o.id} onSel={v=>onAns(q.key,v)} dark={dark} beginner={beginner}/>)}</div>
       <div style={{display:"flex",gap:9,marginTop:16}}>
         <button onClick={onPrev} disabled={isFirst} style={{display:"flex",alignItems:"center",gap:4,padding:"10px 15px",borderRadius:11,fontSize:12.5,fontWeight:600,cursor:isFirst?"not-allowed":"pointer",border:"none",opacity:isFirst?.25:1,background:dark?"#334155":"#f1f5f9",color:tx3,transition:"all .15s"}}><ChevronLeft size={14}/>Back</button>
         <button onClick={onNext} disabled={!sel} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"10px 0",borderRadius:11,fontSize:13,fontWeight:700,border:"none",cursor:sel?"pointer":"not-allowed",transition:"all .15s",background:sel?"linear-gradient(135deg,#6366f1,#3b82f6)":"#e2e8f0",color:sel?"#fff":"#94a3b8",boxShadow:sel?"0 4px 14px rgba(99,102,241,.35)":"none"}}>Continue<ChevronRight size={14}/></button>
