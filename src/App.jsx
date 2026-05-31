@@ -895,7 +895,12 @@ export default function App(){
         </div>
         <p style={{margin:0,fontSize:11,color:tx3,paddingLeft:38}}>For psychology &amp; social science students</p>
       </div>
-      <div style={{display:"flex",gap:4}}>
+      <div style={{display:"flex",gap:4,alignItems:"center",flexWrap:"wrap",justifyContent:"flex-end"}}>
+        <div style={{display:"flex",alignItems:"center",gap:2,padding:"3px 4px",borderRadius:10,background:dark?"#1e293b":"#f1f5f9",border:dark?"1px solid #334155":"1px solid #e2e8f0"}}>
+          <button onClick={()=>setBeginner(true)} style={{padding:"4px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:10.5,fontWeight:700,transition:"all .15s",background:beginner?"#6366f1":"transparent",color:beginner?"#fff":(dark?"#64748b":"#94a3b8")}}>Beginner</button>
+          <button onClick={()=>setBeginner(false)} style={{padding:"4px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:10.5,fontWeight:700,transition:"all .15s",background:!beginner?"#6366f1":"transparent",color:!beginner?"#fff":(dark?"#64748b":"#94a3b8")}}>Expert</button>
+        </div>
+        <button onClick={()=>setShowGlossary(true)} style={{padding:7,borderRadius:10,background:"none",border:"none",cursor:"pointer",color:dark?"#818cf8":"#6366f1"}} title="Glossary"><HelpCircle size={14}/></button>
         <button onClick={reset} style={{padding:7,borderRadius:10,background:"none",border:"none",cursor:"pointer",color:tx3}} title="Reset"><RotateCcw size={14}/></button>
         <button onClick={()=>setDark(d=>!d)} style={{padding:7,borderRadius:10,background:"none",border:"none",cursor:"pointer",color:dark?"#fbbf24":tx3}} title="Toggle dark mode">{dark?<Sun size={14}/>:<Moon size={14}/>}</button>
       </div>
