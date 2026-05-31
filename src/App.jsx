@@ -955,13 +955,6 @@ export default function App(){
           </div>
         ))}
         <button onClick={()=>setShowGlossary(true)} style={{width:"100%",marginTop:4,padding:"8px 0",borderRadius:10,border:`1px solid ${dark?"#334155":"#e2e8f0"}`,background:"none",cursor:"pointer",fontSize:11.5,fontWeight:600,color:dark?"#818cf8":"#6366f1",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><HelpCircle size={12}/>Open glossary ({Object.keys(GLOSSARY).length} terms)</button>
-        {[["PLACEHOLDER","REMOVE"]]
-        ].map(([t,d])=>(
-          <div key={t} style={{marginBottom:8,paddingBottom:8,borderBottom:dark?"1px solid #1e293b":"1px solid #f1f5f9"}}>
-            <p style={{fontSize:11,fontWeight:700,color:dark?"#e2e8f0":"#1e293b",margin:"0 0 2px"}}>{t}</p>
-            <p style={{fontSize:11,color:tx2,margin:0,lineHeight:1.5}}>{d}</p>
-          </div>
-        ))}
       </div>
       <div style={{borderRadius:16,padding:"14px 18px",background:"linear-gradient(135deg,#6366f1,#3b82f6)",color:"#fff"}}>
         <p style={{fontSize:11,fontWeight:700,margin:"0 0 4px",opacity:.85,textTransform:"uppercase",letterSpacing:".06em"}}>Reference</p>
