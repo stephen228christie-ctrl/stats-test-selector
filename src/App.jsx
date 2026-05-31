@@ -71,6 +71,7 @@ const T={
     jmv:"T-Tests → Independent Samples T-Test (Welch's is the default in jamovi)",
     cnt:"Cannot tell you which variable caused the difference, or whether groups also differ on unmeasured variables.",
     sup:"Supervisors may ask: 'Why Welch's not Student's t?' Answer: Welch's is the modern recommended default — robust to variance inequality with negligible cost when variances are equal.",
+    cronbach_note:"If your outcome is a multi-item questionnaire scale, report Cronbach's alpha (α) before this test to confirm reliability (α > .70 acceptable).",
   },
   paired_ttest:{n:"Paired Samples t-Test",e:"🔄",b:"Parametric",fit:5,altKey:"wilcoxon",
     plain:"See if scores changed in the same people over time",
@@ -86,6 +87,7 @@ const T={
     jmv:"T-Tests → Paired Samples T-Test",
     cnt:"Cannot establish causation — only that scores changed between time points. A control group is needed to rule out time/practice effects.",
     sup:"Report t, df, p, and Cohen's d. Check whether a control group was available — without one, alternative explanations for change cannot be ruled out.",
+    cronbach_note:"If your outcome is a multi-item questionnaire scale, report Cronbach's alpha (α) before this test to confirm reliability (α > .70 acceptable).",
   },
   oneway_anova:{n:"One-Way ANOVA",e:"📊",b:"Parametric",fit:4,altKey:"kruskal_wallis",
     plain:"Compare three or more separate groups on a numeric score",
@@ -946,14 +948,20 @@ export default function App(){
         ))}
       </div>
       <div style={{borderRadius:16,padding:"16px 18px",background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 2px 12px rgba(0,0,0,.05)"}}>
-        <p style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:dark?"#818cf8":"#6366f1",margin:"0 0 10px"}}>💡 Quick Tips</p>
-        {[
+        <p style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:dark?"#818cf8":"#6366f1",margin:"0 0 10px"}}>💡 {beginner?"Key Concepts":"Quick Tips"}</p>
+        {(beginner?[
+          ["Dependent Variable (DV)","The outcome you measure — the thing that might change. e.g. stress score, exam mark."],
+          ["Independent Variable (IV)","The variable you think causes or predicts the outcome. e.g. gender, study hours."],
+          ["p-value","p < .05 = statistically significant. Less than 5% chance the result is due to luck."],
+          ["Effect Size","HOW BIG the finding is. Always report alongside p-value — size matters, not just significance."],
+          ["Cronbach's Alpha","Reliability of your questionnaire. Report α before your main analysis. α > .70 is acceptable."],
+        ]:[
           ["Normality","Check residuals AFTER running the model — not raw data."],
           ["Effect Size","Always report alongside p-values. p alone is not enough."],
           ["Post-hoc","Required after significant ANOVA / Kruskal-Wallis."],
           ["Power","Aim for .80 minimum; .90 is increasingly expected."],
           ["APA Style","Never write 'proves' — use 'suggests' or 'indicates'."],
-        ].map(([t,d])=>(
+        ]).map(([t,d])=>(
           <div key={t} style={{marginBottom:8,paddingBottom:8,borderBottom:dark?"1px solid #1e293b":"1px solid #f1f5f9"}}>
             <p style={{fontSize:11,fontWeight:700,color:dark?"#e2e8f0":"#1e293b",margin:"0 0 2px"}}>{t}</p>
             <p style={{fontSize:11,color:tx2,margin:0,lineHeight:1.5}}>{d}</p>
