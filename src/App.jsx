@@ -466,18 +466,23 @@ function nextQ(q,a){
   if(q==="design") return "dv_type";
   if(q==="dv_type"){
     if(a.dvType==="likert") return "likert_type";
-    if(a.dvType==="continuous") return "norm_n";
+    if(a.dvType==="continuous") return "research_stage";
     if(a.dvType==="ordinal") return "result";
     if(a.dvType==="binary"&&a.objective==="compare"&&a.design==="independent") return "cell_size";
     return "result";
   }
-  if(q==="likert_type") return a.likertType==="single"?"result":"norm_n";
+  if(q==="likert_type") return a.likertType==="single"?"result":"research_stage";
   if(q==="rel_type"){
-    if(a.relType==="two_continuous") return "norm_n";
+    if(a.relType==="two_continuous") return "research_stage";
     return "result";
   }
   if(q==="pred_dv_type") return a.predDvType==="continuous"?"pred_iv_count":"result";
   if(q==="pred_iv_count") return "result";
+  if(q==="research_stage"){
+    if(a.researchStage==="proposal") return "result";
+    if(a.researchStage==="collected") return "result";
+    return "norm_n";
+  }
   if(q==="norm_n") return "norm_check";
   if(q==="norm_check") return "norm_result";
   if(q==="norm_result") return "result";
@@ -596,6 +601,17 @@ const QS={
       {id:"multiple",label:"Two or more predictor variables",label_expert:"Two or more predictors",desc:"e.g. predicting exam score from study hours, sleep quality AND stress level",emoji:"🔢"},
     ]
   },
+  research_stage:{
+    title:"Where are you in your research right now?",
+    title_expert:"What is your current research stage?",
+    sub:"This changes what information we need from you",
+    Icon:BookOpen,key:"researchStage",
+    opts:[
+      {id:"proposal",label:"Writing my research proposal — I haven't collected data yet",label_expert:"Research proposal stage — data not yet collected",desc:"You are planning your methodology and need to justify your planned analysis",emoji:"📋"},
+      {id:"collected",label:"I have collected data but haven't run any tests yet",label_expert:"Data collected — normality not yet checked",desc:"You have your data but need to check normality before choosing your test",emoji:"📊"},
+      {id:"analysed",label:"I have collected and analysed my data",label_expert:"Data collected and analysed",desc:"You have already checked normality and know your data distribution",emoji:"✅"},
+    ]
+  },
   norm_n:{
     title:"How many participants do you have per group?",
     title_expert:"How many participants per group? (or total sample for correlations)",
@@ -633,8 +649,8 @@ const QS={
   },
 };
 
-const QID_TO_KEY={objective:"objective",assoc_type:"assocType",cell_size:"cellSize",groups:"groups",design:"design",dv_type:"dvType",likert_type:"likertType",rel_type:"relType",pred_dv_type:"predDvType",pred_iv_count:"predIvCount",norm_n:"normN",norm_check:"normCheck",norm_result:"normResult"};
-const CM={objective:{compare:"Group comparison",relationship:"Relationship",predict:"Prediction",association:"Categorical assoc."},assocType:{nominal:"Nominal vars",ordinal:"Ordinal vars"},cellSize:{adequate:"Cells ≥5",small:"Small cells"},groups:{"2":"2 groups","3plus":"3+ groups"},design:{independent:"Independent",paired:"Paired",repeated:"Repeated"},dvType:{continuous:"Continuous DV",ordinal:"Ordinal DV",likert:"Likert DV",binary:"Binary DV",categorical:"Categorical DV"},likertType:{single:"Single item",multi:"Multi-item scale"},relType:{two_continuous:"2 continuous vars",two_ordinal:"2 ordinal vars",cont_binary:"Continuous×binary",mediation:"Mediation/Moderation"},predDvType:{continuous:"Continuous outcome",binary:"Binary outcome",categorical:"Categorical outcome"},predIvCount:{one:"1 predictor",multiple:"Multiple predictors"},normN:{under30:"n<30",n30_100:"n=30–100",over100:"n>100"},normCheck:{shapiro:"Shapiro-Wilk",qqplot:"Q-Q plot",histogram:"Histogram",all:"All 3 methods",notchecked:"Not checked"},normResult:{normal:"Normal",nonnormal:"Non-normal",unsure:"Unsure"}};
+const QID_TO_KEY={objective:"objective",assoc_type:"assocType",cell_size:"cellSize",groups:"groups",design:"design",dv_type:"dvType",likert_type:"likertType",rel_type:"relType",pred_dv_type:"predDvType",pred_iv_count:"predIvCount",research_stage:"researchStage",norm_n:"normN",norm_check:"normCheck",norm_result:"normResult"};
+const CM={objective:{compare:"Group comparison",relationship:"Relationship",predict:"Prediction",association:"Categorical assoc."},assocType:{nominal:"Nominal vars",ordinal:"Ordinal vars"},cellSize:{adequate:"Cells ≥5",small:"Small cells"},groups:{"2":"2 groups","3plus":"3+ groups"},design:{independent:"Independent",paired:"Paired",repeated:"Repeated"},dvType:{continuous:"Continuous DV",ordinal:"Ordinal DV",likert:"Likert DV",binary:"Binary DV",categorical:"Categorical DV"},likertType:{single:"Single item",multi:"Multi-item scale"},relType:{two_continuous:"2 continuous vars",two_ordinal:"2 ordinal vars",cont_binary:"Continuous×binary",mediation:"Mediation/Moderation"},predDvType:{continuous:"Continuous outcome",binary:"Binary outcome",categorical:"Categorical outcome"},predIvCount:{one:"1 predictor",multiple:"Multiple predictors"},normN:{under30:"n<30",n30_100:"n=30–100",over100:"n>100"},normCheck:{shapiro:"Shapiro-Wilk",qqplot:"Q-Q plot",histogram:"Histogram",all:"All 3 methods",notchecked:"Not checked"},normResult:{normal:"Normal",nonnormal:"Non-normal",unsure:"Unsure"},researchStage:{proposal:"Writing proposal",collected:"Data collected",analysed:"Data analysed"}};
 
 function methodsParagraph(a,normChoice){
   const effAns=normChoice?{...a,normResult:normChoice}:a;
@@ -659,8 +675,8 @@ function HistoGuide({dark,normCheck}){
     {label:"Left-skewed ❌",bars:[1,1,1,2,3,4,6,8,11,13],col:"#ef4444"},
     {label:"Bimodal ❌",bars:[2,6,11,7,3,3,7,11,6,2],col:"#f59e0b"},
   ];
-  const tx2=dark?"#94a3b8":"#475569";
-  const tx3=dark?"#64748b":"#94a3b8";
+  const tx2=dark?"#b4bcd0":"#3d3960";
+  const tx3=dark?"#8896aa":"#94a3b8";
   const guides={
     shapiro:[
       {icon:"✅",label:"p > .05",text:'Fail to reject normality — treat as normal. Report: "Shapiro-Wilk test indicated normality was not violated, W=___, p=.___"'},
@@ -703,7 +719,7 @@ function HistoGuide({dark,normCheck}){
           ].map(({label,desc,col})=>(
             <div key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flex:"1 1 80px"}}>
               <svg width="52" height="32" viewBox="0 0 52 32">
-                <line x1="4" y1="28" x2="48" y2="4" stroke={dark?"#475569":"#cbd5e1"} strokeWidth="1.5" strokeDasharray="3,2"/>
+                <line x1="4" y1="28" x2="48" y2="4" stroke={dark?"#3d3960":"#cbd5e1"} strokeWidth="1.5" strokeDasharray="3,2"/>
                 {col==="#22c55e"&&[{x:6,y:26},{x:15,y:21},{x:26,y:16},{x:37,y:11},{x:46,y:6}].map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="2.5" fill={col} opacity=".8"/>)}
                 {col==="#ef4444"&&[{x:6,y:22},{x:15,y:22},{x:26,y:16},{x:37,y:10},{x:46,y:10}].map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="2.5" fill={col} opacity=".8"/>)}
                 {col==="#f59e0b"&&[{x:6,y:23},{x:15,y:21},{x:26,y:16},{x:37,y:11},{x:46,y:9}].map((p,i)=><circle key={i} cx={p.x} cy={p.y} r="2.5" fill={col} opacity=".8"/>)}
@@ -737,13 +753,13 @@ function HistoGuide({dark,normCheck}){
 // ─── GLOSSARY MODAL ───────────────────────────────────────────────────────────
 function GlossaryModal({dark,onClose}){
   const [search,setSearch]=useState("");
-  const tx1=dark?"#f1f5f9":"#0f172a";
-  const tx2=dark?"#94a3b8":"#475569";
-  const tx3=dark?"#64748b":"#94a3b8";
+  const tx1=dark?"#f1f5f9":"#13111e";
+  const tx2=dark?"#b4bcd0":"#3d3960";
+  const tx3=dark?"#8896aa":"#94a3b8";
   const filtered=Object.entries(GLOSSARY).filter(([k])=>k.toLowerCase().includes(search.toLowerCase()));
   return(
     <div style={{position:"fixed",inset:0,zIndex:999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)"}} onClick={onClose}>
-      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:520,maxHeight:"80vh",borderRadius:20,background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:"0 20px 60px rgba(0,0,0,.3)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:520,maxHeight:"80vh",borderRadius:20,background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:"0 20px 60px rgba(0,0,0,.3)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
         <div style={{padding:"16px 18px",borderBottom:dark?"1px solid #334155":"1px solid #f1f5f9",display:"flex",alignItems:"center",gap:10}}>
           <HelpCircle size={16} style={{color:"#6366f1",flexShrink:0}}/>
           <div style={{flex:1}}>
@@ -753,7 +769,7 @@ function GlossaryModal({dark,onClose}){
           <button onClick={onClose} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,color:tx3,lineHeight:1,padding:2}}>✕</button>
         </div>
         <div style={{padding:"10px 18px",borderBottom:dark?"1px solid #334155":"1px solid #f1f5f9"}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search terms..." style={{width:"100%",padding:"8px 12px",borderRadius:10,border:dark?"1px solid #334155":"1px solid #e2e8f0",background:dark?"#0f172a":"#f8fafc",color:tx1,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search terms..." style={{width:"100%",padding:"8px 12px",borderRadius:10,border:dark?"1px solid #334155":"1px solid #e2e8f0",background:dark?"#13111e":"#f8fafc",color:tx1,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
         </div>
         <div style={{overflowY:"auto",padding:"12px 18px",display:"flex",flexDirection:"column",gap:10}}>
           {filtered.map(([term,def])=>(
@@ -771,18 +787,18 @@ function GlossaryModal({dark,onClose}){
 
 function Tip({term,dark}){
   const [s,setS]=useState(false);if(!TIPS[term]) return null;
-  return(<span style={{position:"relative",display:"inline-flex"}}><button onMouseEnter={()=>setS(true)} onMouseLeave={()=>setS(false)} onClick={e=>{e.stopPropagation();setS(v=>!v)}} style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"#818cf8",lineHeight:1}}><Info size={11}/></button>{s&&<span style={{position:"absolute",bottom:"calc(100% + 4px)",left:0,zIndex:99,width:200,fontSize:11,lineHeight:1.6,borderRadius:10,padding:"8px 10px",background:"#1e293b",color:"#e2e8f0",boxShadow:"0 8px 24px rgba(0,0,0,.25)",pointerEvents:"none"}}>{TIPS[term]}</span>}</span>);}
+  return(<span style={{position:"relative",display:"inline-flex"}}><button onMouseEnter={()=>setS(true)} onMouseLeave={()=>setS(false)} onClick={e=>{e.stopPropagation();setS(v=>!v)}} style={{background:"none",border:"none",cursor:"pointer",padding:"0 2px",color:"#818cf8",lineHeight:1}}><Info size={11}/></button>{s&&<span style={{position:"absolute",bottom:"calc(100% + 4px)",left:0,zIndex:99,width:200,fontSize:11,lineHeight:1.6,borderRadius:10,padding:"8px 10px",background:"#1a1730",color:"#e2e8f0",boxShadow:"0 8px 24px rgba(0,0,0,.25)",pointerEvents:"none"}}>{TIPS[term]}</span>}</span>);}
 
 function Opt({o,sel,onSel,dark,beginner=false}){
-  return(<button onClick={()=>onSel(o.id)} style={{width:"100%",textAlign:"left",padding:"12px 14px",borderRadius:14,border:sel?"2px solid #6366f1":`1.5px solid ${dark?"#334155":"#e2e8f0"}`,background:sel?(dark?"rgba(99,102,241,.15)":"rgba(99,102,241,.06)"):(dark?"#1e293b":"#fff"),cursor:"pointer",transition:"all .15s",boxShadow:sel?"0 0 0 3px rgba(99,102,241,.15)":"none"}}>
+  return(<button onClick={()=>onSel(o.id)} style={{width:"100%",textAlign:"left",padding:"12px 14px",borderRadius:14,border:sel?"2px solid #6366f1":`1.5px solid ${dark?"#2d2a45":"#e2e8f0"}`,background:sel?(dark?"rgba(99,102,241,.15)":"rgba(99,102,241,.06)"):(dark?"#1a1730":"#fff"),cursor:"pointer",transition:"all .15s",boxShadow:sel?"0 0 0 3px rgba(99,102,241,.15)":"none"}}>
     <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
       <span style={{fontSize:18,lineHeight:1,marginTop:2,flexShrink:0}}>{o.emoji}</span>
-      <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}><span style={{fontWeight:600,fontSize:13,color:sel?(dark?"#a5b4fc":"#4338ca"):(dark?"#f1f5f9":"#1e293b")}}>{beginner?(o.label||o.label_expert):(o.label_expert||o.label)}</span>{o.tip&&<Tip term={o.tip} dark={dark}/>}{sel&&<CheckCircle size={12} style={{color:"#6366f1",marginLeft:"auto",flexShrink:0}}/>}</div><p style={{fontSize:11,margin:"2px 0 0",color:dark?"#64748b":"#94a3b8",lineHeight:1.5}}>{o.desc}</p></div>
+      <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}><span style={{fontWeight:600,fontSize:13,color:sel?(dark?"#a5b4fc":"#4338ca"):(dark?"#f1f5f9":"#1a1730")}}>{beginner?(o.label||o.label_expert):(o.label_expert||o.label)}</span>{o.tip&&<Tip term={o.tip} dark={dark}/>}{sel&&<CheckCircle size={12} style={{color:"#6366f1",marginLeft:"auto",flexShrink:0}}/>}</div><p style={{fontSize:11,margin:"2px 0 0",color:dark?"#8896aa":"#94a3b8",lineHeight:1.5}}>{o.desc}</p></div>
     </div>
   </button>);}
 
 function FitBadge({fit,dark}){
-  const tx3=dark?"#64748b":"#94a3b8";
+  const tx3=dark?"#8896aa":"#94a3b8";
   return(<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flexShrink:0}}>
     <div style={{display:"flex",gap:1}}>{[1,2,3,4,5].map(i=><span key={i} style={{fontSize:13,opacity:i<=fit?1:.12}}>⭐</span>)}</div>
     <div style={{display:"flex",alignItems:"center",gap:2}}><span style={{fontSize:10,fontWeight:700,color:FIT_COL[fit]||tx3}}>{FIT[fit]||""}</span><Tip term="design_fit" dark={dark}/></div>
@@ -790,7 +806,7 @@ function FitBadge({fit,dark}){
 
 function Crumb({hist,ans,dark,onJump}){
   const [hov,setHov]=useState(null);
-  const tx3=dark?"#64748b":"#94a3b8";
+  const tx3=dark?"#8896aa":"#94a3b8";
   const items=[];
   hist.filter(q=>q!=="result"&&q!=="norm_result").forEach(qId=>{
     const k=QID_TO_KEY[qId];if(!k||!ans[k]||!CM[k]?.[ans[k]]) return;
@@ -803,7 +819,7 @@ function Crumb({hist,ans,dark,onJump}){
     <p style={{fontSize:9,fontWeight:600,textTransform:"uppercase",letterSpacing:".06em",color:tx3,margin:"0 0 5px"}}>Your path — click any step to jump back and change your answer</p>
     <div style={{display:"flex",flexWrap:"wrap",alignItems:"center",gap:"3px 4px"}}>
       {items.map(({label,qId},i)=>(<span key={i} style={{display:"flex",alignItems:"center",gap:4}}>
-        <button onClick={()=>onJump(qId)} onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(null)} style={{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:99,border:"none",cursor:"pointer",transition:"all .15s",background:hov===i?(dark?"rgba(99,102,241,.25)":"rgba(99,102,241,.12)"):(dark?"#334155":"#f1f5f9"),color:hov===i?(dark?"#c7d2fe":"#4338ca"):(dark?"#94a3b8":"#64748b"),textDecoration:hov===i?"underline":"none"}}>{label}</button>
+        <button onClick={()=>onJump(qId)} onMouseEnter={()=>setHov(i)} onMouseLeave={()=>setHov(null)} style={{fontSize:11,fontWeight:500,padding:"2px 8px",borderRadius:99,border:"none",cursor:"pointer",transition:"all .15s",background:hov===i?(dark?"rgba(99,102,241,.25)":"rgba(99,102,241,.12)"):(dark?"#2d2a45":"#f1f5f9"),color:hov===i?(dark?"#c7d2fe":"#4338ca"):(dark?"#b4bcd0":"#64748b"),textDecoration:hov===i?"underline":"none"}}>{label}</button>
         {i<items.length-1&&<span style={{fontSize:10,color:tx3}}>→</span>}
       </span>))}
     </div>
@@ -814,25 +830,25 @@ function DualPanel({ans,swOverride,dark,onChoose}){
   const nAns={...ans,normResult:"nonnormal"};
   const pTK=recommend(pAns),nTK=recommend(nAns);
   const pTT=T[pTK],nTT=T[nTK];
-  const tx2=dark?"#94a3b8":"#475569",tx3=dark?"#64748b":"#94a3b8";
+  const tx2=dark?"#b4bcd0":"#3d3960",tx3=dark?"#8896aa":"#94a3b8";
   if(!pTT||!nTT||pTK===nTK){if(pTK===nTK) onChoose("normal");return null;}
   return(<div style={{animation:"fadeUp .4s ease-out both"}}>
     <div style={{marginBottom:14,padding:"14px 16px",borderRadius:16,background:swOverride?(dark?"rgba(251,191,36,.1)":"#fefce8"):(dark?"rgba(99,102,241,.1)":"#f5f3ff"),border:`1.5px solid ${swOverride?(dark?"rgba(251,191,36,.35)":"#fde68a"):(dark?"rgba(99,102,241,.3)":"#ddd6fe")}`}}>
-      <p style={{fontSize:13,fontWeight:700,color:swOverride?(dark?"#fbbf24":"#92400e"):(dark?"#f1f5f9":"#0f172a"),margin:"0 0 6px"}}>{swOverride?"⚠️ Shapiro-Wilk oversensitivity detected":"🤔 Your normality is unclear — here are both pathways"}</p>
+      <p style={{fontSize:13,fontWeight:700,color:swOverride?(dark?"#fbbf24":"#92400e"):(dark?"#f1f5f9":"#13111e"),margin:"0 0 6px"}}>{swOverride?"⚠️ Shapiro-Wilk oversensitivity detected":"🤔 Your normality is unclear — here are both pathways"}</p>
       {swOverride&&<p style={{fontSize:12.5,color:dark?"#fde68a":"#78350f",margin:"0 0 6px"}}>Shapiro-Wilk with n&gt;100 often rejects normality for trivially small deviations. Please check your Q-Q plot — if points roughly follow the diagonal, your data is likely fine for parametric tests.</p>}
       <p style={{fontSize:12.5,color:tx2,margin:0}}>Choose the test that better matches your data. Both are legitimate — choose parametric for more power if assumptions hold, non-parametric for safety.</p>
     </div>
-    <div style={{marginBottom:14,padding:"12px 14px",borderRadius:12,background:dark?"rgba(99,102,241,.07)":"#f8fafc",border:`1px solid ${dark?"#334155":"#e2e8f0"}`}}>
+    <div style={{marginBottom:14,padding:"12px 14px",borderRadius:12,background:dark?"rgba(99,102,241,.07)":"#f8fafc",border:`1px solid ${dark?"#2d2a45":"#e2e8f0"}`}}>
       <p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",color:tx3,margin:"0 0 8px"}}>How to decide</p>
       {[["Q-Q plot points roughly follow the diagonal","→ Parametric is likely fine"],["Histogram bell-shaped with n ≥ 30","→ Parametric is acceptable (CLT)"],["Clear skew, obvious outliers, or n < 30","→ Non-parametric is safer"],["Shapiro-Wilk flagged non-normal with n > 100","→ Check Q-Q plot — probably fine"],["Still genuinely unsure after checking","→ Non-parametric: minimal power cost, avoids violations"]].map(([c,r],i)=>(<div key={i} style={{display:"flex",gap:8,marginBottom:i<4?5:0,flexWrap:"wrap"}}><span style={{fontSize:12,color:tx3,flex:"1 1 160px"}}>{c}</span><span style={{fontSize:12,fontWeight:600,color:dark?"#818cf8":"#4f46e5",flexShrink:0}}>{r}</span></div>))}
     </div>
     <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-      {[[pTK,pTT,"If normally distributed","normal","✅ Use parametric","linear-gradient(135deg,#6366f1,#3b82f6)","rgba(99,102,241,.35)"],[nTK,nTT,"If non-normal or unsure","nonnormal","🛡️ Use non-parametric (safer)","linear-gradient(135deg,#22c55e,#16a34a)","rgba(34,197,94,.35)"]].map(([tk,tt,label,choice,btnLabel,btnBg,btnShadow])=>(<div key={choice} style={{flex:"1 1 200px",borderRadius:16,border:`1.5px solid ${dark?"#334155":"#e2e8f0"}`,background:dark?"#1e293b":"#fff",overflow:"hidden"}}>
+      {[[pTK,pTT,"If normally distributed","normal","✅ Use parametric","linear-gradient(135deg,#6366f1,#3b82f6)","rgba(99,102,241,.35)"],[nTK,nTT,"If non-normal or unsure","nonnormal","🛡️ Use non-parametric (safer)","linear-gradient(135deg,#22c55e,#16a34a)","rgba(34,197,94,.35)"]].map(([tk,tt,label,choice,btnLabel,btnBg,btnShadow])=>(<div key={choice} style={{flex:"1 1 200px",borderRadius:16,border:`1.5px solid ${dark?"#2d2a45":"#e2e8f0"}`,background:dark?"#1a1730":"#fff",overflow:"hidden"}}>
         <div style={{padding:"5px 14px",background:choice==="normal"?(dark?"rgba(99,102,241,.2)":"rgba(99,102,241,.1)"):(dark?"rgba(34,197,94,.15)":"rgba(34,197,94,.08)")}}>
           <p style={{fontSize:10,fontWeight:700,color:choice==="normal"?(dark?"#a5b4fc":"#4f46e5"):(dark?"#4ade80":"#15803d"),margin:0}}>{label}</p>
         </div>
         <div style={{padding:"12px 14px"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}><span style={{fontSize:22}}>{tt.e}</span><p style={{fontSize:13,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",margin:0,lineHeight:1.2}}>{tt.n}</p></div>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}><span style={{fontSize:22}}>{tt.e}</span><p style={{fontSize:13,fontWeight:700,color:dark?"#f1f5f9":"#13111e",margin:0,lineHeight:1.2}}>{tt.n}</p></div>
           <p style={{fontSize:12,color:tx3,margin:"0 0 6px",lineHeight:1.4}}>{tt.tl}</p>
           <p style={{fontSize:11.5,color:tx2,margin:"0 0 12px"}}><strong>Effect:</strong> {tt.eff.split("—")[0].trim()}</p>
           <button onClick={()=>onChoose(choice)} style={{width:"100%",padding:"9px 0",borderRadius:10,border:"none",cursor:"pointer",fontSize:12.5,fontWeight:700,background:btnBg,color:"#fff",boxShadow:`0 3px 10px ${btnShadow}`}}>{btnLabel}</button>
@@ -840,6 +856,60 @@ function DualPanel({ans,swOverride,dark,onChoose}){
       </div>))}
     </div>
   </div>);}
+
+// ─── PROPOSAL / COLLECTED STAGE RESULT ───────────────────────────────────────
+function ProposalResult({ans,dark,onReset,beginner}){
+  const tx1=dark?"#f1f5f9":"#0f172a";
+  const tx2=dark?"#b4bcd0":"#475569";
+  const tx3=dark?"#8896aa":"#64748b";
+  const pAns={...ans,normResult:"normal",researchStage:"analysed"};
+  const nAns={...ans,normResult:"nonnormal",researchStage:"analysed"};
+  const pTK=recommend(pAns),nTK=recommend(nAns);
+  const pTT=T[pTK],nTT=T[nTK];
+  const isCollected=ans.researchStage==="collected";
+  return(<div style={{animation:"fadeUp .4s ease-out both",display:"flex",flexDirection:"column",gap:14}}>
+    <div style={{padding:"16px 18px",borderRadius:16,background:isCollected?(dark?"rgba(59,130,246,.1)":"#eff6ff"):(dark?"rgba(139,92,246,.1)":"#f5f3ff"),border:`1.5px solid ${isCollected?(dark?"rgba(59,130,246,.3)":"#bfdbfe"):(dark?"rgba(139,92,246,.3)":"#ddd6fe")}`}}>
+      <p style={{fontSize:14,fontWeight:700,color:isCollected?(dark?"#60a5fa":"#1d4ed8"):(dark?"#c4b5fd":"#5b21b6"),margin:"0 0 8px"}}>{isCollected?"📊 Check normality first — then choose your test":"📋 Planning your analysis"}</p>
+      {isCollected?(
+        <div>
+          <p style={{fontSize:13,color:tx2,margin:"0 0 10px",lineHeight:1.6}}>Before choosing your final test, you need to check whether your data is normally distributed. Run this in SPSS — it takes about 3 minutes:</p>
+          <div style={{background:dark?"#0d0b1a":"#f1f5f9",borderRadius:10,padding:"10px 14px",fontFamily:"monospace",fontSize:12,color:dark?"#93c5fd":"#1e40af",lineHeight:1.9}}>
+            Analyze → Descriptive Statistics → Explore<br/>
+            → Move your variable to "Dependent List"<br/>
+            → Click "Plots" → tick "Normality plots with tests"<br/>
+            → OK → check Shapiro-Wilk p-value and Q-Q plot
+          </div>
+          <p style={{fontSize:12,color:tx3,margin:"10px 0 0",lineHeight:1.5}}>Once checked, come back and re-run this tool — select "I have collected and analysed my data" to get your confirmed recommendation.</p>
+        </div>
+      ):(
+        <p style={{fontSize:13,color:tx2,margin:0,lineHeight:1.6}}>Since you have not collected data yet, normality cannot be checked. Below are both test options. Plan for the parametric test but keep the non-parametric as your backup. Your supervisor will appreciate that you have considered both.</p>
+      )}
+    </div>
+    {(pTT&&nTT&&pTK!==nTK)&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+      <p style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:tx3,margin:0}}>{isCollected?"Both options — check normality to decide":"Plan for both — confirm when data is collected"}</p>
+      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        {[[pTK,pTT,"If normally distributed","linear-gradient(135deg,#6366f1,#3b82f6)"],[nTK,nTT,"If non-normal / skewed","linear-gradient(135deg,#22c55e,#16a34a)"]].map(([tk,tt,label,btnBg])=>(
+          <div key={tk} style={{flex:"1 1 220px",borderRadius:16,background:dark?"rgba(255,255,255,.04)":"#fff",border:`1.5px solid ${dark?"#2d2a45":"#e2e8f0"}`,overflow:"hidden"}}>
+            <div style={{padding:"6px 14px",background:btnBg}}>
+              <p style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,.9)",margin:0,letterSpacing:".06em"}}>{label}</p>
+            </div>
+            <div style={{padding:"14px 16px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}><span style={{fontSize:20}}>{tt.e}</span><p style={{fontSize:13,fontWeight:700,color:tx1,margin:0,lineHeight:1.2}}>{tt.n}</p></div>
+              <p style={{fontSize:12,color:tx2,margin:"0 0 6px",lineHeight:1.5}}>{beginner?(tt.plain||tt.tl):tt.tl}</p>
+              <p style={{fontSize:11,color:tx3,margin:0}}>{tt.eff.split("—")[0].trim()}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>}
+    <div style={{padding:"12px 14px",borderRadius:12,background:dark?"rgba(251,191,36,.06)":"#fefce8",border:`1px solid ${dark?"rgba(251,191,36,.2)":"#fde68a"}`}}>
+      <p style={{fontSize:11,fontWeight:700,color:dark?"#fbbf24":"#92400e",margin:"0 0 4px"}}>{isCollected?"💬 What to write while you check":"💬 Writing your methods section?"}</p>
+      <p style={{fontSize:12.5,color:dark?"#fde68a":"#78350f",margin:0,lineHeight:1.6}}>{isCollected?"You can write: 'Normality was assessed using Shapiro-Wilk test and Q-Q plot inspection. Pending results, either [parametric] or [non-parametric] will be used.' Update once you have checked.":"Write: 'Normality will be assessed using Shapiro-Wilk test and Q-Q plot inspection. Pending normality results, either [parametric test] or [non-parametric alternative] will be used as appropriate.' This shows your supervisor you have thought it through."}</p>
+    </div>
+    <button onClick={onReset} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}><RotateCcw size={13}/>Start a new analysis</button>
+  </div>);
+}
+
 
 function Result({ans,dark,onReset,hist,onJump,beginner=false}){
   const [tab,setTab]=useState("why");
@@ -861,8 +931,8 @@ function Result({ans,dark,onReset,hist,onJump,beginner=false}){
   const curTT=viewAlt?(altT||null):tt;
   const switchTo=(toAlt)=>{if(toAlt===viewAlt) return;setViewAlt(toAlt);setTab("why");setSwOpen(null);};
   const [bBg,bTx]=BC[(curTT||tt).b]||["#e5e7eb","#374151"];
-  const tx2=dark?"#94a3b8":"#475569",tx3=dark?"#64748b":"#94a3b8";
-  const surf=dark?"rgba(255,255,255,.04)":"#f8fafc";
+  const tx2=dark?"#b4bcd0":"#3d3960",tx3=dark?"#8896aa":"#94a3b8";
+  const surf=dark?"rgba(255,255,255,.06)":"#f8fafc";
   const normNotChecked=ans.normCheck==="notchecked"&&effectiveNorm(effectiveAns)==="normal"&&!isDual;
   const wrData=curTK?WR[curTK]:null;
   const altDisplayName=altT?altT.n:tt.alt.n;
@@ -879,42 +949,42 @@ function Result({ans,dark,onReset,hist,onJump,beginner=false}){
     {isDual?(
       <>
         <DualPanel ans={ans} swOverride={swOverride} dark={dark} onChoose={setNormChoice}/>
-        <button onClick={onReset} style={{width:"100%",marginTop:14,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#334155":"#f1f5f9",color:tx3,transition:"all .15s"}}><RotateCcw size={13}/>Start a new analysis</button>
+        <button onClick={onReset} style={{width:"100%",marginTop:14,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}><RotateCcw size={13}/>Start a new analysis</button>
       </>
     ):(
       <>
         {normChoice&&(ans.normResult==="unsure"||swOverride)&&(
-          <button onClick={()=>{setNormChoice(null);setViewAlt(false);}} style={{width:"100%",marginBottom:10,padding:"8px 0",borderRadius:12,border:`1px solid ${dark?"#475569":"#c7d2fe"}`,background:"none",cursor:"pointer",fontSize:12,color:dark?"#818cf8":"#4f46e5",fontWeight:600}}>← Show both options again</button>
+          <button onClick={()=>{setNormChoice(null);setViewAlt(false);}} style={{width:"100%",marginBottom:10,padding:"8px 0",borderRadius:12,border:`1px solid ${dark?"#3d3960":"#c7d2fe"}`,background:"none",cursor:"pointer",fontSize:12,color:dark?"#818cf8":"#4f46e5",fontWeight:600}}>← Show both options again</button>
         )}
-        <div style={{borderRadius:20,padding:"20px 20px 16px",marginBottom:10,background:dark?"linear-gradient(135deg,rgba(67,56,202,.4),rgba(30,41,59,.95))":"linear-gradient(135deg,#eef2ff,#eff6ff)",border:dark?"1.5px solid rgba(99,102,241,.4)":"1.5px solid #c7d2fe"}}>
+        <div style={{borderRadius:20,padding:"20px 20px 16px",marginBottom:10,background:dark?"linear-gradient(135deg,rgba(79,60,220,.45),rgba(26,23,48,.98))":"linear-gradient(135deg,#eef2ff,#eff6ff)",border:dark?"1.5px solid rgba(99,102,241,.4)":"1.5px solid #c7d2fe"}}>
           <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
             <div style={{flex:1}}>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
                 {!viewAlt?<><CheckCircle size={14} style={{color:"#22c55e"}}/><span style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:"#22c55e"}}>Recommended Test</span></>:<><span style={{fontSize:12}}>🔄</span><span style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".08em",color:dark?"#818cf8":"#6366f1"}}>Alternative Test — Exploring</span></>}
               </div>
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}><span style={{fontSize:24}}>{(curTT||tt).e}</span><h2 style={{margin:0,fontSize:18,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",lineHeight:1.2}}>{(curTT||tt).n}</h2></div>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}><span style={{fontSize:24}}>{(curTT||tt).e}</span><h2 style={{margin:0,fontSize:18,fontWeight:700,color:dark?"#f1f5f9":"#13111e",lineHeight:1.2}}>{(curTT||tt).n}</h2></div>
               <p style={{margin:"0 0 10px",fontSize:12.5,color:tx2}}>{beginner?((curTT||tt).plain||(curTT||tt).tl):(curTT||tt).tl}</p>
-              <div style={{display:"flex",gap:7,flexWrap:"wrap"}}><span style={{padding:"3px 10px",borderRadius:999,fontSize:11,fontWeight:700,background:bBg,color:bTx}}>{(curTT||tt).b}</span>{(curTT||tt).ph&&<span style={{padding:"3px 10px",borderRadius:999,fontSize:11,fontWeight:600,background:dark?"#334155":"#fff",color:tx3,border:`1px solid ${dark?"#475569":"#e2e8f0"}`}}>Post-hoc needed</span>}</div>
+              <div style={{display:"flex",gap:7,flexWrap:"wrap"}}><span style={{padding:"3px 10px",borderRadius:999,fontSize:11,fontWeight:700,background:bBg,color:bTx}}>{(curTT||tt).b}</span>{(curTT||tt).ph&&<span style={{padding:"3px 10px",borderRadius:999,fontSize:11,fontWeight:600,background:dark?"#2d2a45":"#fff",color:tx3,border:`1px solid ${dark?"#3d3960":"#e2e8f0"}`}}>Post-hoc needed</span>}</div>
             </div>
             <FitBadge fit={(curTT||tt).fit} dark={dark}/>
           </div>
           <div style={{marginTop:12,paddingTop:12,borderTop:`1px solid ${dark?"rgba(255,255,255,.1)":"rgba(0,0,0,.07)"}`,display:"flex",gap:8}}>
-            <button onClick={()=>switchTo(false)} style={{flex:1,textAlign:"left",padding:"9px 11px",borderRadius:11,border:!viewAlt?"2px solid #6366f1":`1.5px solid ${dark?"#475569":"#e2e8f0"}`,background:!viewAlt?(dark?"rgba(99,102,241,.2)":"rgba(99,102,241,.1)"):surf,cursor:"pointer",transition:"all .15s"}}>
+            <button onClick={()=>switchTo(false)} style={{flex:1,textAlign:"left",padding:"9px 11px",borderRadius:11,border:!viewAlt?"2px solid #6366f1":`1.5px solid ${dark?"#3d3960":"#e2e8f0"}`,background:!viewAlt?(dark?"rgba(99,102,241,.2)":"rgba(99,102,241,.1)"):surf,cursor:"pointer",transition:"all .15s"}}>
               <p style={{fontSize:10,fontWeight:700,color:!viewAlt?(dark?"#a5b4fc":"#4f46e5"):tx3,margin:"0 0 2px"}}>{!viewAlt?"● SHOWING — ":""}✅ RECOMMENDED</p>
-              <p style={{fontSize:11.5,fontWeight:600,color:!viewAlt?(dark?"#e0e7ff":"#3730a3"):(dark?"#94a3b8":"#64748b"),margin:0}}>{tt.n}</p>
+              <p style={{fontSize:11.5,fontWeight:600,color:!viewAlt?(dark?"#e0e7ff":"#3730a3"):(dark?"#b4bcd0":"#64748b"),margin:0}}>{tt.n}</p>
             </button>
-            <button onClick={()=>switchTo(true)} style={{flex:1,textAlign:"left",padding:"9px 11px",borderRadius:11,border:viewAlt?"2px solid #6366f1":`1.5px solid ${dark?"#475569":"#e2e8f0"}`,background:viewAlt?(dark?"rgba(99,102,241,.2)":"rgba(99,102,241,.1)"):surf,cursor:"pointer",transition:"all .15s"}}>
+            <button onClick={()=>switchTo(true)} style={{flex:1,textAlign:"left",padding:"9px 11px",borderRadius:11,border:viewAlt?"2px solid #6366f1":`1.5px solid ${dark?"#3d3960":"#e2e8f0"}`,background:viewAlt?(dark?"rgba(99,102,241,.2)":"rgba(99,102,241,.1)"):surf,cursor:"pointer",transition:"all .15s"}}>
               <p style={{fontSize:10,fontWeight:700,color:viewAlt?(dark?"#a5b4fc":"#4f46e5"):tx3,margin:"0 0 2px"}}>{viewAlt?"● SHOWING — ":""}🔄 ALTERNATIVE</p>
-              <p style={{fontSize:11.5,fontWeight:600,color:viewAlt?(dark?"#e0e7ff":"#3730a3"):(dark?"#94a3b8":"#64748b"),margin:0}}>{altDisplayName}</p>
+              <p style={{fontSize:11.5,fontWeight:600,color:viewAlt?(dark?"#e0e7ff":"#3730a3"):(dark?"#b4bcd0":"#64748b"),margin:0}}>{altDisplayName}</p>
               {!viewAlt&&<p style={{fontSize:10.5,color:tx3,margin:"2px 0 0"}}>{tt.alt.w.charAt(0).toUpperCase()+tt.alt.w.slice(1)}</p>}
             </button>
           </div>
         </div>
 
         {curTT?(
-          <div style={{borderRadius:20,overflow:"hidden",background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 4px 24px rgba(0,0,0,.06)"}}>
+          <div style={{borderRadius:20,overflow:"hidden",background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 4px 24px rgba(0,0,0,.06)"}}>
             <div style={{display:"flex",borderBottom:dark?"1px solid #334155":"1px solid #f1f5f9",overflowX:"auto"}}>
-              {TABS.map(([id,lbl,Ic])=>(<button key={id} onClick={()=>setTab(id)} style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",gap:4,padding:"12px 14px",fontSize:11,fontWeight:600,border:"none",cursor:"pointer",whiteSpace:"nowrap",borderBottom:tab===id?"2.5px solid #6366f1":"2.5px solid transparent",background:tab===id?(dark?"rgba(99,102,241,.12)":"rgba(99,102,241,.05)"):"transparent",color:tab===id?(dark?"#a5b4fc":"#4f46e5"):(dark?"#64748b":"#94a3b8"),transition:"all .15s"}}><Ic size={11}/>{lbl}</button>))}
+              {TABS.map(([id,lbl,Ic])=>(<button key={id} onClick={()=>setTab(id)} style={{flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",gap:4,padding:"12px 14px",fontSize:11,fontWeight:600,border:"none",cursor:"pointer",whiteSpace:"nowrap",borderBottom:tab===id?"2.5px solid #6366f1":"2.5px solid transparent",background:tab===id?(dark?"rgba(99,102,241,.12)":"rgba(99,102,241,.05)"):"transparent",color:tab===id?(dark?"#a5b4fc":"#4f46e5"):(dark?"#8896aa":"#94a3b8"),transition:"all .15s"}}><Ic size={11}/>{lbl}</button>))}
             </div>
             <div style={{padding:"18px 20px"}}>
               {tab==="why"&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -925,48 +995,48 @@ function Result({ans,dark,onReset,hist,onJump,beginner=false}){
                 {curTT.cnt&&<div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(239,68,68,.07)":"#fef2f2",border:`1px solid ${dark?"rgba(239,68,68,.2)":"#fecaca"}`}}><p style={{fontSize:10,fontWeight:700,color:dark?"#f87171":"#dc2626",margin:"0 0 3px"}}>🚫 This test cannot tell you</p><p style={{fontSize:12.5,color:dark?"#fca5a5":"#991b1b",margin:0}}>{curTT.cnt}</p></div>}
                 {curTT.sup&&<div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(251,191,36,.08)":"#fefce8",border:`1px solid ${dark?"rgba(251,191,36,.2)":"#fde68a"}`}}><p style={{fontSize:10,fontWeight:700,color:dark?"#fbbf24":"#92400e",margin:"0 0 3px"}}>💬 Supervisor tip</p><p style={{fontSize:12.5,color:dark?"#fde68a":"#78350f",margin:0,whiteSpace:"pre-line"}}>{curTT.sup}</p></div>}
                 {curTT.sw&&<div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(139,92,246,.1)":"#f5f3ff",border:`1px solid ${dark?"rgba(139,92,246,.25)":"#ddd6fe"}`}}><p style={{fontSize:11.5,color:dark?"#c4b5fd":"#5b21b6",margin:0}}>💡 <strong>Software tip:</strong> {curTT.sw}</p></div>}
-                <div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(255,255,255,.03)":"#f8fafc",border:`1px solid ${dark?"#334155":"#e2e8f0"}`}}><p style={{fontSize:11.5,color:tx3,margin:0}}>⚠️ <strong>Running multiple tests?</strong> If you are running several analyses on the same dataset, consider applying a Bonferroni correction (divide your α by the number of tests) to control the family-wise error rate. Discuss this with your supervisor.</p></div>
+                <div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(255,255,255,.03)":"#f8fafc",border:`1px solid ${dark?"#2d2a45":"#e2e8f0"}`}}><p style={{fontSize:11.5,color:tx3,margin:0}}>⚠️ <strong>Running multiple tests?</strong> If you are running several analyses on the same dataset, consider applying a Bonferroni correction (divide your α by the number of tests) to control the family-wise error rate. Discuss this with your supervisor.</p></div>
               </div>}
               {tab==="run"&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
                 {beginner&&<div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(34,197,94,.07)":"#f0fdf4",border:`1px solid ${dark?"rgba(34,197,94,.18)":"#bbf7d0"}`}}><p style={{fontSize:12,color:dark?"#86efac":"#166634",margin:0}}>📌 <strong>Most Indian universities use SPSS.</strong> Follow the SPSS steps below. jamovi is a free alternative — download at jamovi.org</p></div>}
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}><p style={{fontSize:12,color:tx2,margin:0}}>Step-by-step for common software:</p><span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:dark?"rgba(34,197,94,.1)":"#f0fdf4",color:dark?"#4ade80":"#15803d",border:`1px solid ${dark?"rgba(34,197,94,.2)":"#bbf7d0"}`}}>jamovi &amp; JASP are free</span></div>
-                {[["SPSS",curTT.spss],["jamovi (free)",curTT.jmv],["JASP (free)","Same pathway as jamovi. Open JASP, navigate to the equivalent test section, and move your variables across."]].map(([swName,step])=>(<div key={swName} style={{borderRadius:12,overflow:"hidden",border:`1px solid ${dark?"#334155":"#e2e8f0"}`}}><button onClick={()=>setSwOpen(swOpen===swName?null:swName)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:dark?"#0f172a":"#f8fafc",border:"none",cursor:"pointer",color:dark?"#f1f5f9":"#1e293b"}}><span style={{fontSize:12.5,fontWeight:600}}>{swName}</span><ChevronDown size={14} style={{transform:swOpen===swName?"rotate(180deg)":"none",transition:"transform .2s",flexShrink:0}}/></button>{swOpen===swName&&<div style={{padding:"10px 14px",background:dark?"#1e293b":"#fff"}}><p style={{fontSize:13,lineHeight:1.7,color:tx2,margin:0,background:dark?"#0f172a":"#f1f5f9",padding:"8px 10px",borderRadius:8,fontFamily:"monospace"}}>{step}</p></div>}</div>))}
+                {[["SPSS",curTT.spss],["jamovi (free)",curTT.jmv],["JASP (free)","Same pathway as jamovi. Open JASP, navigate to the equivalent test section, and move your variables across."]].map(([swName,step])=>(<div key={swName} style={{borderRadius:12,overflow:"hidden",border:`1px solid ${dark?"#2d2a45":"#e2e8f0"}`}}><button onClick={()=>setSwOpen(swOpen===swName?null:swName)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 14px",background:dark?"#13111e":"#f8fafc",border:"none",cursor:"pointer",color:dark?"#f1f5f9":"#1a1730"}}><span style={{fontSize:12.5,fontWeight:600}}>{swName}</span><ChevronDown size={14} style={{transform:swOpen===swName?"rotate(180deg)":"none",transition:"transform .2s",flexShrink:0}}/></button>{swOpen===swName&&<div style={{padding:"10px 14px",background:dark?"#1a1730":"#fff"}}><p style={{fontSize:13,lineHeight:1.7,color:tx2,margin:0,background:dark?"#13111e":"#f1f5f9",padding:"8px 10px",borderRadius:8,fontFamily:"monospace"}}>{step}</p></div>}</div>))}
               </div>}
               {tab==="wr"&&wrData&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
                 <div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(99,102,241,.08)":"#f5f3ff",border:`1px solid ${dark?"rgba(99,102,241,.18)":"#ddd6fe"}`}}><p style={{fontSize:11.5,color:dark?"#a5b4fc":"#4f46e5",margin:0}}>📝 Fill in the blanks. Use <strong>[significantly]</strong> if p &lt; .05; replace with <strong>[not significantly]</strong> and adjust wording if p ≥ .05.</p></div>
                 <div style={{padding:"12px 14px",borderRadius:12,background:dark?"rgba(99,102,241,.08)":"#f5f3ff",border:`1px solid ${dark?"rgba(99,102,241,.2)":"#ddd6fe"}`}}>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",color:dark?"#a5b4fc":"#4f46e5",margin:0}}>APA 7th Edition Template</p><button onClick={()=>doCopy(wrData[0],"apa")} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",borderRadius:8,background:"none",border:`1px solid ${dark?"#475569":"#c7d2fe"}`,cursor:"pointer",fontSize:11,color:dark?"#818cf8":"#4f46e5"}}><Copy size={10}/>{copied==="apa"?"✓ Copied!":"Copy"}</button></div>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",color:dark?"#a5b4fc":"#4f46e5",margin:0}}>APA 7th Edition Template</p><button onClick={()=>doCopy(wrData[0],"apa")} style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px",borderRadius:8,background:"none",border:`1px solid ${dark?"#3d3960":"#c7d2fe"}`,cursor:"pointer",fontSize:11,color:dark?"#818cf8":"#4f46e5"}}><Copy size={10}/>{copied==="apa"?"✓ Copied!":"Copy"}</button></div>
                   <p style={{fontSize:13,lineHeight:1.8,color:tx2,margin:0,fontFamily:"Georgia,serif"}}>{wrData[0]}</p>
                 </div>
                 <div style={{padding:"12px 14px",borderRadius:12,background:dark?"rgba(34,197,94,.06)":"#f0fdf4",border:`1px solid ${dark?"rgba(34,197,94,.15)":"#bbf7d0"}`}}><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",color:dark?"#4ade80":"#15803d",margin:"0 0 5px"}}>In plain English</p><p style={{fontSize:13,lineHeight:1.7,color:dark?"#86efac":"#166534",margin:0}}>{wrData[1]}</p></div>
                 <div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(251,191,36,.08)":"#fefce8",border:`1px solid ${dark?"rgba(251,191,36,.2)":"#fde68a"}`}}><p style={{fontSize:11.5,color:dark?"#fbbf24":"#92400e",margin:0}}>⚠️ Never write "proves" or "accepts H₀" — write "suggests", "indicates", or "failed to reject H₀" instead.</p></div>
               </div>}
               {tab==="power"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-                <div style={{padding:"12px 14px",borderRadius:12,background:dark?"rgba(99,102,241,.08)":"#f5f3ff",border:`1px solid ${dark?"rgba(99,102,241,.2)":"#ddd6fe"}`}}><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",color:dark?"#a5b4fc":"#4f46e5",margin:"0 0 6px"}}>G*Power path</p><p style={{fontSize:13,color:tx2,margin:0,fontFamily:"monospace",background:dark?"#0f172a":"#f1f5f9",padding:"8px 10px",borderRadius:8}}>{curTK&&GP[curTK]||"Check G*Power documentation."}</p></div>
+                <div style={{padding:"12px 14px",borderRadius:12,background:dark?"rgba(99,102,241,.08)":"#f5f3ff",border:`1px solid ${dark?"rgba(99,102,241,.2)":"#ddd6fe"}`}}><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",color:dark?"#a5b4fc":"#4f46e5",margin:"0 0 6px"}}>G*Power path</p><p style={{fontSize:13,color:tx2,margin:0,fontFamily:"monospace",background:dark?"#13111e":"#f1f5f9",padding:"8px 10px",borderRadius:8}}>{curTK&&GP[curTK]||"Check G*Power documentation."}</p></div>
                 <div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(59,130,246,.08)":"#eff6ff",border:`1px solid ${dark?"rgba(59,130,246,.2)":"#bfdbfe"}`}}><p style={{fontSize:12,color:dark?"#93c5fd":"#1e40af",margin:0}}>{GP_NOTE}</p></div>
                 {curTK&&GP_WARN[curTK]&&<div style={{padding:"10px 12px",borderRadius:10,background:dark?"rgba(251,191,36,.08)":"#fefce8",border:`1px solid ${dark?"rgba(251,191,36,.2)":"#fde68a"}`}}><p style={{fontSize:12,color:dark?"#fbbf24":"#92400e",margin:0}}>{GP_WARN[curTK]}</p></div>}
-                <div style={{padding:"12px 14px",borderRadius:12,background:surf,border:`1px solid ${dark?"#334155":"#e2e8f0"}`}}><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",color:tx3,margin:"0 0 6px"}}>Effect size for this test</p><p style={{fontSize:13,color:tx2,margin:0}}>{curTT.eff}</p></div>
+                <div style={{padding:"12px 14px",borderRadius:12,background:surf,border:`1px solid ${dark?"#2d2a45":"#e2e8f0"}`}}><p style={{fontSize:10,fontWeight:700,textTransform:"uppercase",color:tx3,margin:"0 0 6px"}}>Effect size for this test</p><p style={{fontSize:13,color:tx2,margin:0}}>{curTT.eff}</p></div>
                 <p style={{fontSize:11,color:tx3,margin:0,textAlign:"center"}}>G*Power is free — search "G*Power Faul 2007" to download.</p>
               </div>}
               {tab==="ass"&&<div>
                 <p style={{fontSize:12.5,color:tx3,marginTop:0,marginBottom:12}}>Your data doesn't need to be perfect — verify these before running your analysis:</p>
-                <div style={{display:"flex",flexDirection:"column",gap:7}}>{curTT.ass.map((a,i)=>(<div key={i} style={{display:"flex",alignItems:"flex-start",gap:9,padding:"9px 11px",borderRadius:10,background:surf}}><span style={{width:18,height:18,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,flexShrink:0,marginTop:1,background:dark?"rgba(99,102,241,.25)":"#ede9fe",color:dark?"#a5b4fc":"#4f46e5"}}>{i+1}</span><p style={{fontSize:12.5,lineHeight:1.6,color:tx2,margin:0}}>{a}</p></div>))}</div>
+                <div style={{display:"flex",flexDirection:"column",gap:7}}>{curTT.ass.map((a,i)=>(<div key={i} style={{display:"flex",alignItems:"flex-start",gap:9,padding:"9px 11px",borderRadius:10,background:surf}}><span style={{width:18,height:18,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,flexShrink:0,marginTop:1,background:dark?"rgba(99,102,241,.35)":"#ede9fe",color:dark?"#c4b5fd":"#4f46e5"}}>{i+1}</span><p style={{fontSize:12.5,lineHeight:1.6,color:tx2,margin:0}}>{a}</p></div>))}</div>
                 {curTT.ph&&<div style={{marginTop:12,padding:"11px 13px",borderRadius:12,background:dark?"rgba(59,130,246,.08)":"#eff6ff",border:`1px solid ${dark?"rgba(59,130,246,.2)":"#bfdbfe"}`}}><p style={{fontSize:10,fontWeight:700,color:dark?"#60a5fa":"#1d4ed8",margin:"0 0 3px"}}>📋 Post-hoc tests required</p><p style={{fontSize:12.5,color:dark?"#93c5fd":"#1e40af",margin:0}}>{curTT.ph}</p></div>}
               </div>}
             </div>
           </div>
         ):(
-          <div style={{borderRadius:20,padding:"20px",background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0"}}>
-            <p style={{fontSize:14,fontWeight:600,color:dark?"#f1f5f9":"#0f172a",margin:"0 0 8px"}}>{altDisplayName}</p>
+          <div style={{borderRadius:20,padding:"20px",background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0"}}>
+            <p style={{fontSize:14,fontWeight:600,color:dark?"#f1f5f9":"#13111e",margin:"0 0 8px"}}>{altDisplayName}</p>
             <p style={{fontSize:13,lineHeight:1.7,color:tx2,margin:"0 0 10px"}}>Use the {altDisplayName} <strong>{tt.alt.w}</strong>.</p>
             <p style={{fontSize:12.5,color:tx3,margin:0}}>Full details for this test aren't included in our selector. Consult Field (2018), your supervisor, or your software documentation for guidance.</p>
           </div>
         )}
 
-        <button onClick={()=>doCopy(methodsParagraph(ans,normChoice),"methods")} style={{width:"100%",marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:`1px solid ${dark?"#334155":"#e2e8f0"}`,background:dark?"#1e293b":"#fff",color:tx2,transition:"all .15s"}}>
+        <button onClick={()=>doCopy(methodsParagraph(ans,normChoice),"methods")} style={{width:"100%",marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:`1px solid ${dark?"#2d2a45":"#e2e8f0"}`,background:dark?"#1a1730":"#fff",color:tx2,transition:"all .15s"}}>
           <Copy size={13}/>{copied==="methods"?"✓ Copied to clipboard!":"Copy methods justification paragraph"}
         </button>
-        <button onClick={onReset} style={{width:"100%",marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#334155":"#f1f5f9",color:tx3,transition:"all .15s"}}>
+        <button onClick={onReset} style={{width:"100%",marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}>
           <RotateCcw size={13}/>Start a new analysis
         </button>
       </>
@@ -976,20 +1046,21 @@ function Result({ans,dark,onReset,hist,onJump,beginner=false}){
 function Question({qId,ans,onAns,onNext,onPrev,isFirst,animDir,dark,beginner=false}){
   const q=QS[qId];if(!q) return null;
   const {Icon}=q,sel=ans[q.key];
-  const tx3=dark?"#64748b":"#94a3b8";
+  const tx3=dark?"#8896aa":"#94a3b8";
   const swWarn=qId==="norm_result"&&ans.normCheck==="shapiro"&&ans.normN==="over100";
+  const collectedNote=qId==="norm_check"&&ans.researchStage==="collected";
   return(<div style={{animation:`${animDir==="forward"?"slideR":"slideL"} .3s ease-out both`}}>
-    <div style={{borderRadius:22,padding:"22px 20px",background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 4px 32px rgba(0,0,0,.07)"}}>
+    <div style={{borderRadius:22,padding:"22px 20px",background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 4px 32px rgba(0,0,0,.07)"}}>
       <div style={{display:"flex",alignItems:"flex-start",gap:10,marginBottom:q.info||swWarn||qId==="norm_result"?12:16}}>
         <div style={{padding:9,borderRadius:11,flexShrink:0,background:dark?"rgba(99,102,241,.15)":"#eef2ff",color:dark?"#818cf8":"#4f46e5"}}><Icon size={17}/></div>
-        <div><h2 style={{margin:0,fontSize:15.5,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",lineHeight:1.3}}>{beginner?(q.title||q.title_expert):(q.title_expert||q.title)}</h2><p style={{margin:"3px 0 0",fontSize:11,color:tx3}}>{q.sub}</p></div>
+        <div><h2 style={{margin:0,fontSize:15.5,fontWeight:700,color:dark?"#f1f5f9":"#13111e",lineHeight:1.3}}>{beginner?(q.title||q.title_expert):(q.title_expert||q.title)}</h2><p style={{margin:"3px 0 0",fontSize:11,color:tx3}}>{q.sub}</p></div>
       </div>
       {qId==="norm_result"&&<HistoGuide dark={dark} normCheck={ans.normCheck}/>}
       {q.info&&<div style={{marginBottom:14,padding:"10px 12px",borderRadius:12,background:dark?"rgba(99,102,241,.1)":"#f5f3ff",border:`1px solid ${dark?"rgba(99,102,241,.25)":"#ddd6fe"}`}}><p style={{fontSize:12,lineHeight:1.6,color:dark?"#c4b5fd":"#5b21b6",margin:0,whiteSpace:"pre-line"}}>💡 {q.info}</p></div>}
       {swWarn&&<div style={{marginBottom:14,padding:"10px 12px",borderRadius:12,background:dark?"rgba(251,191,36,.08)":"#fefce8",border:`1px solid ${dark?"rgba(251,191,36,.2)":"#fde68a"}`}}><p style={{fontSize:12,lineHeight:1.6,color:dark?"#fbbf24":"#92400e",margin:0}}>⚠️ Shapiro-Wilk is oversensitive with n&gt;100 — trivial deviations may be flagged. Consider selecting "I'm not sure" to see both pathways, or verify with a Q-Q plot first.</p></div>}
       <div style={{display:"flex",flexDirection:"column",gap:7}}>{q.opts.map(o=><Opt key={o.id} o={o} sel={sel===o.id} onSel={v=>onAns(q.key,v)} dark={dark} beginner={beginner}/>)}</div>
       <div style={{display:"flex",gap:9,marginTop:16}}>
-        <button onClick={onPrev} disabled={isFirst} style={{display:"flex",alignItems:"center",gap:4,padding:"10px 15px",borderRadius:11,fontSize:12.5,fontWeight:600,cursor:isFirst?"not-allowed":"pointer",border:"none",opacity:isFirst?.25:1,background:dark?"#334155":"#f1f5f9",color:tx3,transition:"all .15s"}}><ChevronLeft size={14}/>Back</button>
+        <button onClick={onPrev} disabled={isFirst} style={{display:"flex",alignItems:"center",gap:4,padding:"10px 15px",borderRadius:11,fontSize:12.5,fontWeight:600,cursor:isFirst?"not-allowed":"pointer",border:"none",opacity:isFirst?.25:1,background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}><ChevronLeft size={14}/>Back</button>
         <button onClick={onNext} disabled={!sel} style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:5,padding:"10px 0",borderRadius:11,fontSize:13,fontWeight:700,border:"none",cursor:sel?"pointer":"not-allowed",transition:"all .15s",background:sel?"linear-gradient(135deg,#6366f1,#3b82f6)":"#e2e8f0",color:sel?"#fff":"#94a3b8",boxShadow:sel?"0 4px 14px rgba(99,102,241,.35)":"none"}}>Continue<ChevronRight size={14}/></button>
       </div>
     </div>
@@ -1017,7 +1088,7 @@ export default function App(){
   };
   const reset=()=>{setAns({});setHist(["objective"]);go("forward","objective");};
   const progress=cQ==="result"?100:Math.min(90,Math.round((hist.length/10)*100));
-  const tx1=dark?"#f1f5f9":"#0f172a",tx3=dark?"#64748b":"#94a3b8",tx2=dark?"#94a3b8":"#475569";
+  const tx1=dark?"#f1f5f9":"#13111e",tx3=dark?"#8896aa":"#94a3b8",tx2=dark?"#b4bcd0":"#3d3960";
 
   // Shared header + progress used in both layouts
   const Header=(
@@ -1031,9 +1102,9 @@ export default function App(){
         <p style={{margin:0,fontSize:11,color:tx3,paddingLeft:38}}>For psychology &amp; social science students</p>
       </div>
       <div style={{display:"flex",gap:4,alignItems:"center",flexWrap:"wrap",justifyContent:"flex-end"}}>
-        <div style={{display:"flex",alignItems:"center",gap:2,padding:"3px 4px",borderRadius:10,background:dark?"#1e293b":"#f1f5f9",border:dark?"1px solid #334155":"1px solid #e2e8f0"}}>
-          <button onClick={()=>setBeginner(true)} style={{padding:"4px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:10.5,fontWeight:700,transition:"all .15s",background:beginner?"#6366f1":"transparent",color:beginner?"#fff":(dark?"#64748b":"#94a3b8")}}>Beginner</button>
-          <button onClick={()=>setBeginner(false)} style={{padding:"4px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:10.5,fontWeight:700,transition:"all .15s",background:!beginner?"#6366f1":"transparent",color:!beginner?"#fff":(dark?"#64748b":"#94a3b8")}}>Expert</button>
+        <div style={{display:"flex",alignItems:"center",gap:2,padding:"3px 4px",borderRadius:10,background:dark?"#1a1730":"#f1f5f9",border:dark?"1px solid #334155":"1px solid #e2e8f0"}}>
+          <button onClick={()=>setBeginner(true)} style={{padding:"4px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:10.5,fontWeight:700,transition:"all .15s",background:beginner?"#6366f1":"transparent",color:beginner?"#fff":(dark?"#8896aa":"#94a3b8")}}>Beginner</button>
+          <button onClick={()=>setBeginner(false)} style={{padding:"4px 10px",borderRadius:8,border:"none",cursor:"pointer",fontSize:10.5,fontWeight:700,transition:"all .15s",background:!beginner?"#6366f1":"transparent",color:!beginner?"#fff":(dark?"#8896aa":"#94a3b8")}}>Expert</button>
         </div>
         <button onClick={()=>setShowGlossary(true)} style={{padding:7,borderRadius:10,background:"none",border:"none",cursor:"pointer",color:dark?"#818cf8":"#6366f1"}} title="Glossary"><HelpCircle size={14}/></button>
         <button onClick={reset} style={{padding:7,borderRadius:10,background:"none",border:"none",cursor:"pointer",color:tx3}} title="Reset"><RotateCcw size={14}/></button>
@@ -1044,7 +1115,7 @@ export default function App(){
 
   const ProgressBar=(
     <div style={{marginBottom:16}}>
-      <div style={{height:5,borderRadius:99,background:dark?"#334155":"#e2e8f0",overflow:"hidden"}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,#6366f1,#3b82f6)",width:`${progress}%`,transition:"width .7s ease-out"}}/></div>
+      <div style={{height:5,borderRadius:99,background:dark?"#2d2a45":"#e2e8f0",overflow:"hidden"}}><div style={{height:"100%",borderRadius:99,background:"linear-gradient(90deg,#6366f1,#3b82f6)",width:`${progress}%`,transition:"width .7s ease-out"}}/></div>
       <div style={{display:"flex",justifyContent:"space-between",marginTop:5,fontSize:11,color:tx3}}><span>Step {hist.length}</span><span>{progress}% complete</span></div>
     </div>
   );
@@ -1052,17 +1123,19 @@ export default function App(){
   const MainContent=(
     <>
       {cQ==="result"
-        ?<Result key={aKey} ans={ans} dark={dark} onReset={reset} hist={hist} onJump={handleJump} beginner={beginner}/>
+        ?(ans.researchStage==="proposal"||ans.researchStage==="collected")
+          ?<ProposalResult key={aKey} ans={ans} dark={dark} onReset={reset} beginner={beginner}/>
+          :<Result key={aKey} ans={ans} dark={dark} onReset={reset} hist={hist} onJump={handleJump} beginner={beginner}/>
         :<Question key={aKey} qId={cQ} ans={ans} onAns={(k,v)=>setAns(a=>({...a,[k]:v}))} onNext={handleNext} onPrev={handlePrev} isFirst={hist.length===1} animDir={aDir} dark={dark} beginner={beginner}/>
       }
-      <p style={{textAlign:"center",fontSize:11,color:dark?"#475569":"#cbd5e1",marginTop:20}}>Based on APA &amp; Field (2018) statistical guidelines</p>
+      <p style={{textAlign:"center",fontSize:11,color:dark?"#3d3960":"#cbd5e1",marginTop:20}}>Based on APA &amp; Field (2018) statistical guidelines</p>
     </>
   );
 
   // Desktop sidebar content — test library overview
   const DesktopSidebar=(
     <div style={{width:280,flexShrink:0,display:"flex",flexDirection:"column",gap:12}}>
-      <div style={{borderRadius:16,padding:"16px 18px",background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 2px 12px rgba(0,0,0,.05)"}}>
+      <div style={{borderRadius:16,padding:"16px 18px",background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 2px 12px rgba(0,0,0,.05)"}}>
         <p style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:dark?"#818cf8":"#6366f1",margin:"0 0 12px"}}>📚 Test Library</p>
         {[
           {cat:"Parametric",col:"#6366f1",bg:dark?"rgba(99,102,241,.12)":"#eef2ff",tests:["Welch's t-Test","Paired t-Test","One-Way ANOVA","Repeated Measures ANOVA","Pearson r","Simple Regression","Multiple Regression","Logistic Regression"]},
@@ -1080,7 +1153,7 @@ export default function App(){
           </div>
         ))}
       </div>
-      <div style={{borderRadius:16,padding:"16px 18px",background:dark?"#1e293b":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 2px 12px rgba(0,0,0,.05)"}}>
+      <div style={{borderRadius:16,padding:"16px 18px",background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 2px 12px rgba(0,0,0,.05)"}}>
         <p style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:dark?"#818cf8":"#6366f1",margin:"0 0 10px"}}>💡 {beginner?"Key Concepts":"Quick Tips"}</p>
         {(beginner?[
           ["Dependent Variable (DV)","The outcome you measure — the thing that might change. e.g. stress score, exam mark."],
@@ -1096,11 +1169,11 @@ export default function App(){
           ["APA Style","Never write 'proves' — use 'suggests' or 'indicates'."],
         ]).map(([t,d])=>(
           <div key={t} style={{marginBottom:8,paddingBottom:8,borderBottom:dark?"1px solid #1e293b":"1px solid #f1f5f9"}}>
-            <p style={{fontSize:11,fontWeight:700,color:dark?"#e2e8f0":"#1e293b",margin:"0 0 2px"}}>{t}</p>
+            <p style={{fontSize:11,fontWeight:700,color:dark?"#e2e8f0":"#1a1730",margin:"0 0 2px"}}>{t}</p>
             <p style={{fontSize:11,color:tx2,margin:0,lineHeight:1.5}}>{d}</p>
           </div>
         ))}
-        <button onClick={()=>setShowGlossary(true)} style={{width:"100%",marginTop:4,padding:"8px 0",borderRadius:10,border:`1px solid ${dark?"#334155":"#e2e8f0"}`,background:"none",cursor:"pointer",fontSize:11.5,fontWeight:600,color:dark?"#818cf8":"#6366f1",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><HelpCircle size={12}/>Open glossary ({Object.keys(GLOSSARY).length} terms)</button>
+        <button onClick={()=>setShowGlossary(true)} style={{width:"100%",marginTop:4,padding:"8px 0",borderRadius:10,border:`1px solid ${dark?"#2d2a45":"#e2e8f0"}`,background:"none",cursor:"pointer",fontSize:11.5,fontWeight:600,color:dark?"#818cf8":"#6366f1",display:"flex",alignItems:"center",justifyContent:"center",gap:5}}><HelpCircle size={12}/>Open glossary ({Object.keys(GLOSSARY).length} terms)</button>
       </div>
       <div style={{borderRadius:16,padding:"14px 18px",background:"linear-gradient(135deg,#6366f1,#3b82f6)",color:"#fff"}}>
         <p style={{fontSize:11,fontWeight:700,margin:"0 0 4px",opacity:.85,textTransform:"uppercase",letterSpacing:".06em"}}>Reference</p>
@@ -1110,7 +1183,7 @@ export default function App(){
   );
 
   return(
-    <div style={{minHeight:"100vh",background:dark?"#0f172a":"linear-gradient(135deg,#f8faff,#eef2ff,#eff6ff)",transition:"background .3s"}}>
+    <div style={{minHeight:"100vh",background:dark?"#13111e":"linear-gradient(135deg,#f8faff,#eef2ff,#eff6ff)",transition:"background .3s"}}>
       {showGlossary&&<GlossaryModal dark={dark} onClose={()=>setShowGlossary(false)}/>}
       <style>{`
         @keyframes slideR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
