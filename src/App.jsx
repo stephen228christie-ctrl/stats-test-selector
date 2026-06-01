@@ -862,8 +862,8 @@ function ProposalResult({ans,dark,onReset,beginner}){
   const tx1=dark?"#f1f5f9":"#0f172a";
   const tx2=dark?"#b4bcd0":"#475569";
   const tx3=dark?"#8896aa":"#64748b";
-  const pAns={...ans,normResult:"normal",researchStage:"analysed"};
-  const nAns={...ans,normResult:"nonnormal",researchStage:"analysed"};
+  const pAns={...ans,normResult:"normal",researchStage:"analysed",normN:ans.normN||"n30_100",normCheck:ans.normCheck||"qqplot"};
+  const nAns={...ans,normResult:"nonnormal",researchStage:"analysed",normN:ans.normN||"n30_100",normCheck:ans.normCheck||"qqplot"};
   const pTK=recommend(pAns),nTK=recommend(nAns);
   const pTT=T[pTK],nTT=T[nTK];
   const isCollected=ans.researchStage==="collected";
@@ -885,10 +885,10 @@ function ProposalResult({ans,dark,onReset,beginner}){
         <p style={{fontSize:13,color:tx2,margin:0,lineHeight:1.6}}>Since you have not collected data yet, normality cannot be checked. Below are both test options. Plan for the parametric test but keep the non-parametric as your backup. Your supervisor will appreciate that you have considered both.</p>
       )}
     </div>
-    {(pTT&&nTT&&pTK!==nTK)&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+    {(pTT&&nTT)&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
       <p style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:tx3,margin:0}}>{isCollected?"Both options — check normality to decide":"Plan for both — confirm when data is collected"}</p>
       <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-        {[[pTK,pTT,"If normally distributed","linear-gradient(135deg,#6366f1,#3b82f6)"],[nTK,nTT,"If non-normal / skewed","linear-gradient(135deg,#22c55e,#16a34a)"]].map(([tk,tt,label,btnBg])=>(
+        {(pTK===nTK?[[pTK,pTT,"Recommended test","linear-gradient(135deg,#6366f1,#3b82f6)"]]:[[pTK,pTT,"If normally distributed","linear-gradient(135deg,#6366f1,#3b82f6)"],[nTK,nTT,"If non-normal / skewed","linear-gradient(135deg,#22c55e,#16a34a)"]]).map(([tk,tt,label,btnBg])=>(
           <div key={tk} style={{flex:"1 1 220px",borderRadius:16,background:dark?"rgba(255,255,255,.04)":"#fff",border:`1.5px solid ${dark?"#2d2a45":"#e2e8f0"}`,overflow:"hidden"}}>
             <div style={{padding:"6px 14px",background:btnBg}}>
               <p style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,.9)",margin:0,letterSpacing:".06em"}}>{label}</p>
