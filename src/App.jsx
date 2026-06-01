@@ -858,7 +858,7 @@ function DualPanel({ans,swOverride,dark,onChoose}){
   </div>);}
 
 // ─── PROPOSAL / COLLECTED STAGE RESULT ───────────────────────────────────────
-function ProposalResult({ans,dark,onReset,beginner}){
+function ProposalResult({ans,dark,onReset,beginner,hist,onJump}){
   const tx1=dark?"#f1f5f9":"#0f172a";
   const tx2=dark?"#b4bcd0":"#475569";
   const tx3=dark?"#8896aa":"#64748b";
@@ -868,6 +868,7 @@ function ProposalResult({ans,dark,onReset,beginner}){
   const pTT=T[pTK],nTT=T[nTK];
   const isCollected=ans.researchStage==="collected";
   return(<div style={{animation:"fadeUp .4s ease-out both",display:"flex",flexDirection:"column",gap:14}}>
+    <Crumb hist={hist||[]} ans={ans} dark={dark} onJump={onJump}/>
     <div style={{padding:"16px 18px",borderRadius:16,background:isCollected?(dark?"rgba(59,130,246,.1)":"#eff6ff"):(dark?"rgba(139,92,246,.1)":"#f5f3ff"),border:`1.5px solid ${isCollected?(dark?"rgba(59,130,246,.3)":"#bfdbfe"):(dark?"rgba(139,92,246,.3)":"#ddd6fe")}`}}>
       <p style={{fontSize:14,fontWeight:700,color:isCollected?(dark?"#60a5fa":"#1d4ed8"):(dark?"#c4b5fd":"#5b21b6"),margin:"0 0 8px"}}>{isCollected?"📊 Check normality first — then choose your test":"📋 Planning your analysis"}</p>
       {isCollected?(
@@ -1124,7 +1125,7 @@ export default function App(){
     <>
       {cQ==="result"
         ?(ans.researchStage==="proposal"||ans.researchStage==="collected")
-          ?<ProposalResult key={aKey} ans={ans} dark={dark} onReset={reset} beginner={beginner}/>
+          ?<ProposalResult key={aKey} ans={ans} dark={dark} onReset={reset} beginner={beginner} hist={hist} onJump={handleJump}/>
           :<Result key={aKey} ans={ans} dark={dark} onReset={reset} hist={hist} onJump={handleJump} beginner={beginner}/>
         :<Question key={aKey} qId={cQ} ans={ans} onAns={(k,v)=>setAns(a=>({...a,[k]:v}))} onNext={handleNext} onPrev={handlePrev} isFirst={hist.length===1} animDir={aDir} dark={dark} beginner={beginner}/>
       }
