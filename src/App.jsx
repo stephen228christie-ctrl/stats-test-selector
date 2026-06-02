@@ -415,6 +415,8 @@ function effectiveNorm(a){
 
 function recommend(a){
   const ok=effectiveNorm(a)==="normal";
+  // association path now merged into relationship→two_categorical
+  if(a.objective==="mediation_obj") return "mediation_moderation";
   if(a.objective==="association"){
     if(a.assocType==="ordinal") return "kendalls_tau";
     if(a.cellSize==="small") return "fisher_exact";
@@ -424,6 +426,7 @@ function recommend(a){
     if(a.relType==="mediation") return "mediation_moderation";
     if(a.relType==="two_ordinal") return "kendalls_tau";
     if(a.relType==="cont_binary") return "point_biserial";
+    if(a.relType==="two_categorical") return a.cellSize==="small"?"fisher_exact":"chi_square";
     return ok?"pearson":"spearman";
   }
   if(a.objective==="predict"){
@@ -458,7 +461,8 @@ function nextQ(q,a){
     if(a.objective==="compare") return "groups";
     if(a.objective==="relationship") return "rel_type";
     if(a.objective==="predict") return "pred_dv_type";
-    return "assoc_type";
+    if(a.objective==="mediation_obj") return "result";
+    return "result";
   }
   if(q==="assoc_type") return a.assocType==="ordinal"?"result":"cell_size";
   if(q==="cell_size") return "result";
@@ -474,6 +478,7 @@ function nextQ(q,a){
   if(q==="likert_type") return a.likertType==="single"?"result":"research_stage";
   if(q==="rel_type"){
     if(a.relType==="two_continuous") return "research_stage";
+    if(a.relType==="two_categorical") return "cell_size";
     return "result";
   }
   if(q==="pred_dv_type") return a.predDvType==="continuous"?"pred_iv_count":"result";
@@ -493,13 +498,13 @@ const QS={
   objective:{
     title:"What are you trying to find out?",
     title_expert:"What is your primary research objective?",
-    sub:"Pick the option that best matches your research question",
+    sub:"Pick the one that best matches your research question",
     Icon:Target,key:"objective",
     opts:[
       {id:"compare",label:"Are two or more groups different from each other?",label_expert:"Compare groups or conditions",desc:'e.g. "Do hostel students have higher stress than day scholars?"',emoji:"⚖️"},
-      {id:"relationship",label:"Is there a relationship between two variables?",label_expert:"Explore a relationship between variables",desc:'e.g. "Is social media use related to loneliness?"',emoji:"🔗"},
-      {id:"predict",label:"Can one or more variables predict another?",label_expert:"Predict an outcome variable",desc:'e.g. "Can attendance predict exam performance?"',emoji:"🎯"},
-      {id:"association",label:"Are two categories linked to each other?",label_expert:"Test association between two categorical variables",desc:'e.g. "Is gender linked to career choice?"',emoji:"🔲"},
+      {id:"relationship",label:"Is there a relationship between two variables?",label_expert:"Explore a relationship between variables",desc:'e.g. "Is social media use related to loneliness? Is gender linked to career choice?"',emoji:"🔗"},
+      {id:"predict",label:"Can one variable predict another?",label_expert:"Predict an outcome variable",desc:'e.g. "Can attendance predict exam performance?"',emoji:"🎯"},
+      {id:"mediation_obj",label:"Does one variable explain WHY another affects the outcome?",label_expert:"Mediation or moderation analysis",desc:'e.g. "Does self-efficacy explain why support affects grades?" — only select if your supervisor has suggested this',emoji:"🔀"},
     ]
   },
   assoc_type:{
@@ -569,15 +574,15 @@ const QS={
     ]
   },
   rel_type:{
-    title:"What kind of relationship are you looking at?",
+    title:"What type of data are your two variables?",
     title_expert:"What kind of relationship are you examining?",
-    sub:"Choose the option that best describes your analysis",
+    sub:"This determines which test is appropriate — choose what best describes your variables",
     Icon:TrendingUp,key:"relType",
     opts:[
-      {id:"two_continuous",label:"Two numeric variables — e.g. stress score and sleep hours",label_expert:"Correlation — two continuous variables",desc:'"How does study time relate to exam performance?"',emoji:"📉"},
-      {id:"two_ordinal",label:"Two rating scales or ranked variables",label_expert:"Correlation — two ordinal or ranked variables",desc:'"Does education level relate to health awareness rating?"',emoji:"🏷️",tip:"kendall"},
-      {id:"cont_binary",label:"One numeric variable and one yes/no variable",label_expert:"Correlation — continuous variable and a binary variable",desc:'"Is reaction time related to whether someone has ADHD?"',emoji:"⚡"},
-      {id:"mediation",label:"HOW or WHY does one variable affect another?",label_expert:"Mediation or moderation analysis",desc:'"Does self-efficacy explain WHY support affects grades?" — requires a clear theory first',emoji:"🔀",tip:"mediation"},
+      {id:"two_continuous",label:"Both are numbers — e.g. stress score and sleep hours",label_expert:"Correlation — two continuous variables",desc:'e.g. "Does study time relate to exam performance? Does screen time relate to sleep duration?"',emoji:"📉"},
+      {id:"two_ordinal",label:"Both are rating scales or rankings",label_expert:"Correlation — two ordinal or ranked variables",desc:'e.g. "Does education level relate to health awareness rating? Does anxiety rating relate to confidence rating?"',emoji:"🏷️",tip:"kendall"},
+      {id:"cont_binary",label:"One is a number, the other is a yes/no variable",label_expert:"Correlation — continuous variable and a binary variable",desc:'e.g. "Is exam score related to whether students attended coaching (yes/no)?"',emoji:"⚡"},
+      {id:"two_categorical",label:"Both are categories — e.g. gender and career choice",label_expert:"Association between two categorical variables",desc:'e.g. "Is gender linked to therapy preference? Is stream linked to career choice?"',emoji:"🔲"},
     ]
   },
   pred_dv_type:{
@@ -650,7 +655,7 @@ const QS={
 };
 
 const QID_TO_KEY={objective:"objective",assoc_type:"assocType",cell_size:"cellSize",groups:"groups",design:"design",dv_type:"dvType",likert_type:"likertType",rel_type:"relType",pred_dv_type:"predDvType",pred_iv_count:"predIvCount",research_stage:"researchStage",norm_n:"normN",norm_check:"normCheck",norm_result:"normResult"};
-const CM={objective:{compare:"Group comparison",relationship:"Relationship",predict:"Prediction",association:"Categorical assoc."},assocType:{nominal:"Nominal vars",ordinal:"Ordinal vars"},cellSize:{adequate:"Cells ≥5",small:"Small cells"},groups:{"2":"2 groups","3plus":"3+ groups"},design:{independent:"Independent",paired:"Paired",repeated:"Repeated"},dvType:{continuous:"Continuous DV",ordinal:"Ordinal DV",likert:"Likert DV",binary:"Binary DV",categorical:"Categorical DV"},likertType:{single:"Single item",multi:"Multi-item scale"},relType:{two_continuous:"2 continuous vars",two_ordinal:"2 ordinal vars",cont_binary:"Continuous×binary",mediation:"Mediation/Moderation"},predDvType:{continuous:"Continuous outcome",binary:"Binary outcome",categorical:"Categorical outcome"},predIvCount:{one:"1 predictor",multiple:"Multiple predictors"},normN:{under30:"n<30",n30_100:"n=30–100",over100:"n>100"},normCheck:{shapiro:"Shapiro-Wilk",qqplot:"Q-Q plot",histogram:"Histogram",all:"All 3 methods",notchecked:"Not checked"},normResult:{normal:"Normal",nonnormal:"Non-normal",unsure:"Unsure"},researchStage:{proposal:"Writing proposal",collected:"Data collected",analysed:"Data analysed"}};
+const CM={objective:{compare:"Group comparison",relationship:"Relationship",predict:"Prediction",mediation_obj:"Mediation/Moderation",association:"Categorical assoc."},assocType:{nominal:"Nominal vars",ordinal:"Ordinal vars"},cellSize:{adequate:"Cells ≥5",small:"Small cells"},groups:{"2":"2 groups","3plus":"3+ groups"},design:{independent:"Independent",paired:"Paired",repeated:"Repeated"},dvType:{continuous:"Continuous DV",ordinal:"Ordinal DV",likert:"Likert DV",binary:"Binary DV",categorical:"Categorical DV"},likertType:{single:"Single item",multi:"Multi-item scale"},relType:{two_continuous:"2 continuous vars",two_ordinal:"2 ordinal vars",cont_binary:"Continuous×binary",two_categorical:"2 categorical vars",mediation:"Mediation/Moderation"},predDvType:{continuous:"Continuous outcome",binary:"Binary outcome",categorical:"Categorical outcome"},predIvCount:{one:"1 predictor",multiple:"Multiple predictors"},normN:{under30:"n<30",n30_100:"n=30–100",over100:"n>100"},normCheck:{shapiro:"Shapiro-Wilk",qqplot:"Q-Q plot",histogram:"Histogram",all:"All 3 methods",notchecked:"Not checked"},normResult:{normal:"Normal",nonnormal:"Non-normal",unsure:"Unsure"},researchStage:{proposal:"Writing proposal",collected:"Data collected",analysed:"Data analysed"}};
 
 function methodsParagraph(a,normChoice){
   const effAns=normChoice?{...a,normResult:normChoice}:a;
