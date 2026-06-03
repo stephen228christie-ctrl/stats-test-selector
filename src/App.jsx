@@ -848,7 +848,7 @@ function FeedbackModal({dark,onClose,onSubmitAndClose,recommendedTest,objective,
 }
 
 // ─── FEEDBACK FORM ────────────────────────────────────────────────────────────
-function FeedbackForm({dark,recommendedTest,objective,mode}){
+function FeedbackForm({dark,recommendedTest,objective,mode,compact=false}){
   const [open,setOpen]=useState(false);
   const [submitted,setSubmitted]=useState(false);
   const [sending,setSending]=useState(false);
@@ -917,12 +917,12 @@ function FeedbackForm({dark,recommendedTest,objective,mode}){
   return(
     <div style={{marginTop:10}}>
       {!open?(
-        <button onClick={()=>setOpen(true)} style={{width:"100%",padding:"14px 18px",borderRadius:14,border:"none",background:"linear-gradient(135deg,#6366f1,#3b82f6)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"all .15s",boxShadow:"0 4px 14px rgba(99,102,241,.35)"}}>
-          <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:2}}>
-            <span style={{fontSize:13.5,fontWeight:700,color:"#fff"}}>🙏 Help us make this better</span>
-            <span style={{fontSize:11,color:"rgba(255,255,255,.75)"}}>2 minutes — your feedback shapes the next version</span>
-          </div>
-          <span style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",background:"rgba(255,255,255,.15)",padding:"4px 10px",borderRadius:99,whiteSpace:"nowrap"}}>Share →</span>
+        <button onClick={()=>setOpen(true)} style={{width:"100%",padding:compact?"10px 14px":"14px 18px",borderRadius:compact?12:14,border:"none",background:"linear-gradient(135deg,#6366f1,#3b82f6)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"all .15s",boxShadow:"0 4px 14px rgba(99,102,241,.35)"}}>
+          {compact?(
+            <><span style={{fontSize:12.5,fontWeight:700,color:"#fff"}}>🙏 Help us make this better</span><span style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",background:"rgba(255,255,255,.15)",padding:"3px 9px",borderRadius:99}}>2 min →</span></>
+          ):(
+            <><div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:2}}><span style={{fontSize:13.5,fontWeight:700,color:"#fff"}}>🙏 Help us make this better</span><span style={{fontSize:11,color:"rgba(255,255,255,.75)"}}>2 minutes — your feedback shapes the next version</span></div><span style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",background:"rgba(255,255,255,.15)",padding:"4px 10px",borderRadius:99,whiteSpace:"nowrap"}}>Share →</span></>
+          )}
         </button>
       ):(
         <div style={{borderRadius:16,background:dark?"#1a1730":"#fff",border:`1.5px solid ${border}`,overflow:"hidden"}}>
@@ -1131,7 +1131,7 @@ function ProposalResult({ans,dark,onReset,beginner,hist,onJump}){
       <p style={{fontSize:11,fontWeight:700,color:dark?"#fbbf24":"#92400e",margin:"0 0 4px"}}>{isCollected?"💬 What to write while you check":"💬 Writing your methods section?"}</p>
       <p style={{fontSize:12.5,color:dark?"#fde68a":"#78350f",margin:0,lineHeight:1.6}}>{isCollected?"You can write: 'Normality was assessed using Shapiro-Wilk test and Q-Q plot inspection. Pending results, either [parametric] or [non-parametric] will be used.' Update once you have checked.":"Write: 'Normality will be assessed using Shapiro-Wilk test and Q-Q plot inspection. Pending normality results, either [parametric test] or [non-parametric alternative] will be used as appropriate.' This shows your supervisor you have thought it through."}</p>
     </div>
-    <button onClick={onReset} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}><RotateCcw size={13}/>Start a new analysis</button>
+    <button onClick={()=>onReset()} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}><RotateCcw size={13}/>Start a new analysis</button>
     <FeedbackForm dark={dark} recommendedTest="Proposal stage" objective={ans.objective} mode={beginner?"Beginner":"Expert"}/>
   </div>);
 }
@@ -1175,7 +1175,7 @@ function Result({ans,dark,onReset,hist,onJump,beginner=false}){
     {isDual?(
       <>
         <DualPanel ans={ans} swOverride={swOverride} dark={dark} onChoose={setNormChoice}/>
-        <button onClick={onReset} style={{width:"100%",marginTop:14,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}><RotateCcw size={13}/>Start a new analysis</button>
+        <button onClick={()=>onReset()} style={{width:"100%",marginTop:14,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}><RotateCcw size={13}/>Start a new analysis</button>
       </>
     ):(
       <>
@@ -1206,6 +1206,8 @@ function Result({ans,dark,onReset,hist,onJump,beginner=false}){
             </button>
           </div>
         </div>
+
+        <FeedbackForm dark={dark} recommendedTest={(curTT||tt)?.n} objective={ans.objective} mode={beginner?"Beginner":"Expert"} compact/>
 
         {curTT?(
           <div style={{borderRadius:20,overflow:"hidden",background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #334155":"1.5px solid #e2e8f0",boxShadow:dark?"none":"0 4px 24px rgba(0,0,0,.06)"}}>
@@ -1260,12 +1262,11 @@ function Result({ans,dark,onReset,hist,onJump,beginner=false}){
         )}
 
         <button onClick={()=>doCopy(methodsParagraph(ans,normChoice),"methods")} style={{width:"100%",marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:`1px solid ${dark?"#2d2a45":"#e2e8f0"}`,background:dark?"#1a1730":"#fff",color:tx2,transition:"all .15s"}}>
-          <Copy size={13}/>{copied==="methods"?"✓ Copied to clipboard!":"Copy methods justification paragraph"}
+          <Copy size={13}/>{copied==="methods"?"✓ Copied!":"Copy methods paragraph for your report"}
         </button>
-        <button onClick={onReset} style={{width:"100%",marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}>
+        <button onClick={()=>onReset()} style={{width:"100%",marginTop:10,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}>
           <RotateCcw size={13}/>Start a new analysis
         </button>
-        <FeedbackForm dark={dark} recommendedTest={(curTT||tt)?.n} objective={ans.objective} mode={beginner?"Beginner":"Expert"}/>
       </>
     )}
   </div>);}
