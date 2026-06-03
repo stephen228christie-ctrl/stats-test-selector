@@ -1340,7 +1340,7 @@ export default function App(){
     if(feedbackTimerRef[0]) clearTimeout(feedbackTimerRef[0]);
     feedbackTimerRef[0]=setTimeout(()=>{
       if(!feedbackDone) setShowFeedbackModal(true);
-    },30000);
+    },15000);
   };
 
   const reset=(skipModal)=>{
