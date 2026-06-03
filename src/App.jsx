@@ -802,10 +802,15 @@ function FeedbackModal({dark,onClose,onSubmitAndClose,recommendedTest,objective,
       <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:480,maxHeight:"90vh",borderRadius:20,background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #2d2a45":"1.5px solid #e2e8f0",boxShadow:"0 24px 60px rgba(0,0,0,.35)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
 
         {/* Header */}
-        <div style={{padding:"18px 20px 14px",background:"linear-gradient(135deg,#6366f1,#3b82f6)",position:"relative"}}>
+        <div style={{background:"linear-gradient(135deg,#4f46e5,#6366f1,#3b82f6)",padding:"18px 20px 14px",position:"relative"}}>
           <button onClick={onClose} style={{position:"absolute",top:12,right:14,background:"rgba(255,255,255,.15)",border:"none",cursor:"pointer",color:"#fff",fontSize:14,borderRadius:"50%",width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
-          <p style={{fontSize:15,fontWeight:700,color:"#fff",margin:"0 0 3px"}}>🙏 Help us make this better</p>
-          <p style={{fontSize:11.5,color:"rgba(255,255,255,.8)",margin:0}}>This app is still being improved — your honest feedback makes a real difference. Takes 2 minutes.</p>
+          <div style={{display:"flex",alignItems:"flex-start",gap:12,paddingRight:32}}>
+            <div style={{width:40,height:40,borderRadius:"50%",background:"rgba(255,255,255,.2)",border:"2px solid rgba(255,255,255,.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,color:"#fff",flexShrink:0}}>SC</div>
+            <div>
+              <p style={{fontSize:14,fontWeight:700,color:"#fff",margin:"0 0 3px"}}>Hi, I'm Stephen 👋</p>
+              <p style={{fontSize:12,color:"rgba(255,255,255,.85)",margin:0,lineHeight:1.5}}>I built this tool and read every response personally. Takes 2 minutes — your honest feedback shapes what I build next.</p>
+            </div>
+          </div>
         </div>
 
         {submitted?(
@@ -917,13 +922,24 @@ function FeedbackForm({dark,recommendedTest,objective,mode,compact=false}){
   return(
     <div style={{marginTop:10}}>
       {!open?(
-        <button onClick={()=>setOpen(true)} style={{width:"100%",padding:compact?"10px 14px":"14px 18px",borderRadius:compact?12:14,border:"none",background:"linear-gradient(135deg,#6366f1,#3b82f6)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"all .15s",boxShadow:"0 4px 14px rgba(99,102,241,.35)"}}>
-          {compact?(
-            <><span style={{fontSize:12.5,fontWeight:700,color:"#fff"}}>🙏 Help us make this better</span><span style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",background:"rgba(255,255,255,.15)",padding:"3px 9px",borderRadius:99}}>2 min →</span></>
-          ):(
-            <><div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:2}}><span style={{fontSize:13.5,fontWeight:700,color:"#fff"}}>🙏 Help us make this better</span><span style={{fontSize:11,color:"rgba(255,255,255,.75)"}}>2 minutes — your feedback shapes the next version</span></div><span style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",background:"rgba(255,255,255,.15)",padding:"4px 10px",borderRadius:99,whiteSpace:"nowrap"}}>Share →</span></>
-          )}
-        </button>
+        <div style={{borderRadius:18,overflow:"hidden",boxShadow:"0 6px 24px rgba(99,102,241,.25)",marginBottom:2}}>
+          {/* Personal header strip */}
+          <div style={{background:"linear-gradient(135deg,#4f46e5,#6366f1,#3b82f6)",padding:"18px 20px 14px",display:"flex",alignItems:"flex-start",gap:14}}>
+            <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(255,255,255,.2)",border:"2.5px solid rgba(255,255,255,.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:800,color:"#fff",flexShrink:0,letterSpacing:"-0.5px"}}>SC</div>
+            <div style={{flex:1}}>
+              <p style={{fontSize:14,fontWeight:700,color:"#fff",margin:"0 0 3px"}}>Hi, I'm Stephen 👋</p>
+              <p style={{fontSize:12,color:"rgba(255,255,255,.85)",margin:0,lineHeight:1.6}}>I built this tool and I read every piece of feedback personally. Your honest opinion — good or bad — goes directly to me and shapes what I build next.</p>
+            </div>
+          </div>
+          {/* CTA section */}
+          <div style={{background:dark?"#1a1730":"#fff",padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+            <div>
+              <p style={{fontSize:13,fontWeight:600,color:dark?"#f1f5f9":"#0f172a",margin:"0 0 2px"}}>Would you take 2 minutes?</p>
+              <p style={{fontSize:11.5,color:dark?"#8896aa":"#64748b",margin:0}}>6 quick questions — no sign-up needed</p>
+            </div>
+            <button onClick={()=>setOpen(true)} style={{flexShrink:0,padding:"10px 20px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#6366f1,#3b82f6)",cursor:"pointer",fontSize:13,fontWeight:700,color:"#fff",boxShadow:"0 3px 10px rgba(99,102,241,.4)",whiteSpace:"nowrap"}}>Share feedback →</button>
+          </div>
+        </div>
       ):(
         <div style={{borderRadius:16,background:dark?"#1a1730":"#fff",border:`1.5px solid ${border}`,overflow:"hidden"}}>
           <div style={{padding:"14px 18px",background:dark?"rgba(99,102,241,.1)":"#f5f3ff",borderBottom:`1px solid ${border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
@@ -1436,8 +1452,11 @@ export default function App(){
       {showFeedbackModal&&!feedbackDone&&<FeedbackModal dark={dark} onClose={()=>setShowFeedbackModal(false)} onSubmitAndClose={()=>{setShowFeedbackModal(false);setFeedbackDone(true);}} recommendedTest={T[recommend(ans)]?.n} objective={ans.objective} mode={beginner?"Beginner":"Expert"}/>}
       {showResetModal&&<div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)"}} onClick={()=>setShowResetModal(false)}>
         <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:380,borderRadius:20,background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #2d2a45":"1.5px solid #e2e8f0",padding:"24px 22px",boxShadow:"0 20px 50px rgba(0,0,0,.3)"}}>
-          <p style={{fontSize:16,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",margin:"0 0 6px"}}>Before you go 👋</p>
-          <p style={{fontSize:13,color:dark?"#b4bcd0":"#475569",margin:"0 0 20px",lineHeight:1.6}}>Would you take 2 minutes to share your feedback? It genuinely helps us improve this tool for students like you.</p>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,#6366f1,#3b82f6)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:"#fff",flexShrink:0}}>SC</div>
+            <p style={{fontSize:15,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",margin:0}}>Before you go 👋</p>
+          </div>
+          <p style={{fontSize:13,color:dark?"#b4bcd0":"#475569",margin:"0 0 20px",lineHeight:1.6}}>I built this tool and I read every single response. Would you take 2 minutes? Your feedback — good or bad — goes directly to me.</p>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             <button onClick={()=>{setShowResetModal(false);setShowFeedbackModal(true);}} style={{padding:"12px 0",borderRadius:12,border:"none",cursor:"pointer",fontSize:13,fontWeight:700,background:"linear-gradient(135deg,#6366f1,#3b82f6)",color:"#fff",boxShadow:"0 4px 12px rgba(99,102,241,.35)"}}>🙏 Yes, I'll share feedback</button>
             <button onClick={()=>{setShowResetModal(false);reset(true);}} style={{padding:"11px 0",borderRadius:12,border:dark?"1px solid #2d2a45":"1px solid #e2e8f0",cursor:"pointer",fontSize:12.5,fontWeight:600,background:"transparent",color:dark?"#8896aa":"#64748b"}}>No thanks, start new analysis</button>
