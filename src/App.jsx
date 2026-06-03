@@ -805,7 +805,7 @@ function FeedbackModal({dark,onClose,onSubmitAndClose,recommendedTest,objective,
         <div style={{background:"linear-gradient(135deg,#4f46e5,#6366f1,#3b82f6)",padding:"18px 20px 14px",position:"relative"}}>
           <button onClick={onClose} style={{position:"absolute",top:12,right:14,background:"rgba(255,255,255,.15)",border:"none",cursor:"pointer",color:"#fff",fontSize:14,borderRadius:"50%",width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
           <div style={{display:"flex",alignItems:"flex-start",gap:12,paddingRight:32}}>
-            <div style={{width:40,height:40,borderRadius:"50%",background:"rgba(255,255,255,.2)",border:"2px solid rgba(255,255,255,.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,color:"#fff",flexShrink:0}}>SC</div>
+            <img src="https://stephen228christie-ctrl.github.io/stats-test-selector/stephen_avatar.jpg" alt="Stephen" style={{width:40,height:40,borderRadius:"50%",objectFit:"cover",border:"2px solid rgba(255,255,255,.6)",flexShrink:0}}/>
             <div>
               <p style={{fontSize:14,fontWeight:700,color:"#fff",margin:"0 0 3px"}}>Hi, I'm Stephen 👋</p>
               <p style={{fontSize:12,color:"rgba(255,255,255,.85)",margin:0,lineHeight:1.5}}>I built this tool and read every response personally. Takes 2 minutes — your honest feedback shapes what I build next.</p>
@@ -925,7 +925,7 @@ function FeedbackForm({dark,recommendedTest,objective,mode,compact=false}){
         <div style={{borderRadius:18,overflow:"hidden",boxShadow:"0 6px 24px rgba(99,102,241,.25)",marginBottom:2}}>
           {/* Personal header strip */}
           <div style={{background:"linear-gradient(135deg,#4f46e5,#6366f1,#3b82f6)",padding:"18px 20px 14px",display:"flex",alignItems:"flex-start",gap:14}}>
-            <div style={{width:44,height:44,borderRadius:"50%",background:"rgba(255,255,255,.2)",border:"2.5px solid rgba(255,255,255,.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:800,color:"#fff",flexShrink:0,letterSpacing:"-0.5px"}}>SC</div>
+            <img src="https://stephen228christie-ctrl.github.io/stats-test-selector/stephen_avatar.jpg" alt="Stephen" style={{width:44,height:44,borderRadius:"50%",objectFit:"cover",border:"2.5px solid rgba(255,255,255,.6)",flexShrink:0}}/>
             <div style={{flex:1}}>
               <p style={{fontSize:14,fontWeight:700,color:"#fff",margin:"0 0 3px"}}>Hi, I'm Stephen 👋</p>
               <p style={{fontSize:12,color:"rgba(255,255,255,.85)",margin:0,lineHeight:1.6}}>I built this tool and I read every piece of feedback personally. Your honest opinion — good or bad — goes directly to me and shapes what I build next.</p>
@@ -1453,7 +1453,7 @@ export default function App(){
       {showResetModal&&<div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)"}} onClick={()=>setShowResetModal(false)}>
         <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:380,borderRadius:20,background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #2d2a45":"1.5px solid #e2e8f0",padding:"24px 22px",boxShadow:"0 20px 50px rgba(0,0,0,.3)"}}>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-            <div style={{width:38,height:38,borderRadius:"50%",background:"linear-gradient(135deg,#6366f1,#3b82f6)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:"#fff",flexShrink:0}}>SC</div>
+            <img src="https://stephen228christie-ctrl.github.io/stats-test-selector/stephen_avatar.jpg" alt="Stephen" style={{width:38,height:38,borderRadius:"50%",objectFit:"cover",border:"2px solid rgba(99,102,241,.4)",flexShrink:0}}/>
             <p style={{fontSize:15,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",margin:0}}>Before you go 👋</p>
           </div>
           <p style={{fontSize:13,color:dark?"#b4bcd0":"#475569",margin:"0 0 20px",lineHeight:1.6}}>I built this tool and I read every single response. Would you take 2 minutes? Your feedback — good or bad — goes directly to me.</p>
