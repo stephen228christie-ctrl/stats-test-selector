@@ -755,6 +755,130 @@ function HistoGuide({dark,normCheck}){
   </div>);}
 
 
+
+// ─── FEEDBACK FORM ────────────────────────────────────────────────────────────
+function FeedbackForm({dark,recommendedTest,objective,mode}){
+  const [open,setOpen]=useState(false);
+  const [submitted,setSubmitted]=useState(false);
+  const [sending,setSending]=useState(false);
+  const [form,setForm]=useState({
+    name:"",
+    helpful:"",
+    confusing:"",
+    recommend:"",
+    willPay:"",
+    howMuch:"",
+    features:"",
+    other:"",
+  });
+
+  const tx1=dark?"#f1f5f9":"#0f172a";
+  const tx2=dark?"#b4bcd0":"#475569";
+  const tx3=dark?"#8896aa":"#64748b";
+  const surf=dark?"rgba(255,255,255,.05)":"#f8fafc";
+  const border=dark?"#2d2a45":"#e2e8f0";
+
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const handleSubmit=async()=>{
+    if(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch) return;
+    setSending(true);
+    const body=new URLSearchParams({
+      "entry.712452978": form.name||"Anonymous",
+      "entry.483151083": form.helpful,
+      "entry.651429382": form.confusing,
+      "entry.2111102162": form.recommend,
+      "entry.1910595716": form.willPay,
+      "entry.154954033": form.howMuch,
+      "entry.1869438360": form.features||"",
+      "entry.458332761": `[Test: ${recommendedTest||"N/A"}] [Objective: ${objective||"N/A"}] [Mode: ${mode}] ${form.other||""}`.trim(),
+    });
+    try{
+      await fetch("https://docs.google.com/forms/u/0/d/e/1FAIpQLSdNUaHpENzdzBRBUN7OMbFSWRFhZ4aa08yfYmbfWWf4EnK1xQ/formResponse",{method:"POST",body,mode:"no-cors"});
+    }catch(e){}
+    setSending(false);
+    setSubmitted(true);
+  };
+
+  const RadioGroup=({label,options,value,onChange,required})=>(
+    <div style={{marginBottom:12}}>
+      <p style={{fontSize:12,fontWeight:600,color:tx2,margin:"0 0 6px"}}>{label}{required&&<span style={{color:"#f87171"}}> *</span>}</p>
+      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+        {options.map(opt=>(
+          <button key={opt} onClick={()=>onChange(opt)} style={{padding:"6px 12px",borderRadius:99,fontSize:11.5,fontWeight:500,cursor:"pointer",border:`1.5px solid ${value===opt?"#6366f1":border}`,background:value===opt?(dark?"rgba(99,102,241,.2)":"rgba(99,102,241,.08)"):"transparent",color:value===opt?(dark?"#a5b4fc":"#4f46e5"):tx3,transition:"all .15s"}}>
+            {opt}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  if(submitted){
+    return(
+      <div style={{marginTop:10,padding:"16px 18px",borderRadius:16,background:dark?"rgba(34,197,94,.08)":"#f0fdf4",border:`1.5px solid ${dark?"rgba(34,197,94,.25)":"#bbf7d0"}`,textAlign:"center"}}>
+        <p style={{fontSize:22,margin:"0 0 6px"}}>🙏</p>
+        <p style={{fontSize:14,fontWeight:700,color:dark?"#4ade80":"#15803d",margin:"0 0 4px"}}>Thank you for your feedback!</p>
+        <p style={{fontSize:12,color:dark?"#86efac":"#166534",margin:0}}>Your response has been recorded and will directly shape the next version of this app.</p>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{marginTop:10}}>
+      {!open?(
+        <button onClick={()=>setOpen(true)} style={{width:"100%",padding:"12px 0",borderRadius:14,border:`1.5px dashed ${dark?"#2d2a45":"#c7d2fe"}`,background:"transparent",cursor:"pointer",fontSize:12.5,fontWeight:600,color:dark?"#818cf8":"#6366f1",display:"flex",alignItems:"center",justifyContent:"center",gap:7,transition:"all .15s"}}>
+          🙏 Share feedback — help improve this app (2 min)
+        </button>
+      ):(
+        <div style={{borderRadius:16,background:dark?"#1a1730":"#fff",border:`1.5px solid ${border}`,overflow:"hidden"}}>
+          <div style={{padding:"14px 18px",background:dark?"rgba(99,102,241,.1)":"#f5f3ff",borderBottom:`1px solid ${border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <p style={{fontSize:13,fontWeight:700,color:dark?"#a5b4fc":"#4f46e5",margin:"0 0 2px"}}>🙏 Share your feedback</p>
+              <p style={{fontSize:11,color:tx3,margin:0}}>2 minutes — helps make this app better for everyone</p>
+            </div>
+            <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,color:tx3,padding:4}}>✕</button>
+          </div>
+          <div style={{padding:"16px 18px",display:"flex",flexDirection:"column",gap:2}}>
+
+            <div style={{marginBottom:12}}>
+              <p style={{fontSize:12,fontWeight:600,color:tx2,margin:"0 0 5px"}}>Name <span style={{color:tx3,fontWeight:400}}>(optional)</span></p>
+              <input value={form.name} onChange={e=>set("name",e.target.value)} placeholder="Your name" style={{width:"100%",padding:"8px 12px",borderRadius:10,border:`1.5px solid ${border}`,background:surf,color:tx1,fontSize:12.5,outline:"none",boxSizing:"border-box"}}/>
+            </div>
+
+            <RadioGroup label="How helpful was this tool?" options={["1","2","3","4","5"]} value={form.helpful} onChange={v=>set("helpful",v)} required/>
+
+            <RadioGroup label="Was anything confusing or hard to understand?" options={["No, it was clear throughout","One or two things were unclear","I found it quite confusing"]} value={form.confusing} onChange={v=>set("confusing",v)} required/>
+
+            <RadioGroup label="Would you recommend this to a friend?" options={["Yes","No"]} value={form.recommend} onChange={v=>set("recommend",v)} required/>
+
+            <RadioGroup label="Would you pay for a premium version?" options={["Yes, I'd pay for it","Maybe, depends on the price","No, only if it stays free"]} value={form.willPay} onChange={v=>set("willPay",v)} required/>
+
+            <RadioGroup label="How much would you pay per month?" options={["₹49–99 (a cup of coffee)","₹100–199","₹200–499","₹500+ (lifetime access)"]} value={form.howMuch} onChange={v=>set("howMuch",v)} required/>
+
+            <div style={{marginBottom:12}}>
+              <p style={{fontSize:12,fontWeight:600,color:tx2,margin:"0 0 5px"}}>What features would make you pay for it? <span style={{color:tx3,fontWeight:400}}>(optional)</span></p>
+              <input value={form.features} onChange={e=>set("features",e.target.value)} placeholder="e.g. PDF export, save history, more tests..." style={{width:"100%",padding:"8px 12px",borderRadius:10,border:`1.5px solid ${border}`,background:surf,color:tx1,fontSize:12.5,outline:"none",boxSizing:"border-box"}}/>
+            </div>
+
+            <div style={{marginBottom:14}}>
+              <p style={{fontSize:12,fontWeight:600,color:tx2,margin:"0 0 5px"}}>Anything else you'd like to tell us? <span style={{color:tx3,fontWeight:400}}>(optional)</span></p>
+              <textarea value={form.other} onChange={e=>set("other",e.target.value)} placeholder="Any other feedback..." rows={2} style={{width:"100%",padding:"8px 12px",borderRadius:10,border:`1.5px solid ${border}`,background:surf,color:tx1,fontSize:12.5,outline:"none",resize:"vertical",fontFamily:"inherit",boxSizing:"border-box"}}/>
+            </div>
+
+            {(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch)&&(
+              <p style={{fontSize:11,color:"#f87171",margin:"0 0 8px"}}>* Please answer all required questions before submitting</p>
+            )}
+
+            <button onClick={handleSubmit} disabled={sending||!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch} style={{width:"100%",padding:"12px 0",borderRadius:12,border:"none",cursor:(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch)?"not-allowed":"pointer",fontSize:13,fontWeight:700,background:(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch)?"#e2e8f0":"linear-gradient(135deg,#6366f1,#3b82f6)",color:(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch)?"#94a3b8":"#fff",transition:"all .15s"}}>
+              {sending?"Submitting...":"Submit feedback"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── GLOSSARY MODAL ───────────────────────────────────────────────────────────
 function GlossaryModal({dark,onClose}){
   const [search,setSearch]=useState("");
@@ -913,6 +1037,7 @@ function ProposalResult({ans,dark,onReset,beginner,hist,onJump}){
       <p style={{fontSize:12.5,color:dark?"#fde68a":"#78350f",margin:0,lineHeight:1.6}}>{isCollected?"You can write: 'Normality was assessed using Shapiro-Wilk test and Q-Q plot inspection. Pending results, either [parametric] or [non-parametric] will be used.' Update once you have checked.":"Write: 'Normality will be assessed using Shapiro-Wilk test and Q-Q plot inspection. Pending normality results, either [parametric test] or [non-parametric alternative] will be used as appropriate.' This shows your supervisor you have thought it through."}</p>
     </div>
     <button onClick={onReset} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}><RotateCcw size={13}/>Start a new analysis</button>
+    <FeedbackForm dark={dark} recommendedTest="Proposal stage" objective={ans.objective} mode={beginner?"Beginner":"Expert"}/>
   </div>);
 }
 
@@ -1045,6 +1170,7 @@ function Result({ans,dark,onReset,hist,onJump,beginner=false}){
         <button onClick={onReset} style={{width:"100%",marginTop:8,display:"flex",alignItems:"center",justifyContent:"center",gap:7,padding:"11px 0",borderRadius:14,fontSize:12.5,fontWeight:600,cursor:"pointer",border:"none",background:dark?"#2d2a45":"#f1f5f9",color:tx3,transition:"all .15s"}}>
           <RotateCcw size={13}/>Start a new analysis
         </button>
+        <FeedbackForm dark={dark} recommendedTest={(curTT||tt)?.n} objective={ans.objective} mode={beginner?"Beginner":"Expert"}/>
       </>
     )}
   </div>);}
