@@ -756,6 +756,97 @@ function HistoGuide({dark,normCheck}){
 
 
 
+
+// ─── FEEDBACK MODAL (auto popup + reset intercept) ───────────────────────────
+function FeedbackModal({dark,onClose,onSubmitAndClose,recommendedTest,objective,mode}){
+  const tx1=dark?"#f1f5f9":"#0f172a";
+  const tx2=dark?"#b4bcd0":"#475569";
+  const tx3=dark?"#8896aa":"#64748b";
+  const surf=dark?"rgba(255,255,255,.05)":"#f8fafc";
+  const border=dark?"#2d2a45":"#e2e8f0";
+  const [form,setForm]=useState({name:"",helpful:"",confusing:"",recommend:"",willPay:"",howMuch:"",features:"",other:""});
+  const [sending,setSending]=useState(false);
+  const [submitted,setSubmitted]=useState(false);
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const handleSubmit=async()=>{
+    if(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch) return;
+    setSending(true);
+    const body=new URLSearchParams({
+      "entry.712452978":form.name||"Anonymous",
+      "entry.483151083":form.helpful,
+      "entry.651429382":form.confusing,
+      "entry.2111102162":form.recommend,
+      "entry.1910595716":form.willPay,
+      "entry.154954033":form.howMuch,
+      "entry.1869438360":form.features||"",
+      "entry.458332761":`[Test: ${recommendedTest||"N/A"}] [Obj: ${objective||"N/A"}] [Mode: ${mode}] ${form.other||""}`.trim(),
+    });
+    try{ await fetch("https://docs.google.com/forms/u/0/d/e/1FAIpQLSdNUaHpENzdzBRBUN7OMbFSWRFhZ4aa08yfYmbfWWf4EnK1xQ/formResponse",{method:"POST",body,mode:"no-cors"}); }catch(e){}
+    setSending(false);
+    setSubmitted(true);
+    setTimeout(()=>onSubmitAndClose(),1800);
+  };
+
+  const Radio=({label,opts,val,onChange,req})=>(
+    <div style={{marginBottom:11}}>
+      <p style={{fontSize:12,fontWeight:600,color:tx2,margin:"0 0 5px"}}>{label}{req&&<span style={{color:"#f87171"}}> *</span>}</p>
+      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+        {opts.map(o=><button key={o} onClick={()=>onChange(o)} style={{padding:"5px 11px",borderRadius:99,fontSize:11,fontWeight:500,cursor:"pointer",border:`1.5px solid ${val===o?"#6366f1":border}`,background:val===o?(dark?"rgba(99,102,241,.2)":"rgba(99,102,241,.08)"):"transparent",color:val===o?(dark?"#a5b4fc":"#4f46e5"):tx3,transition:"all .15s"}}>{o}</button>)}
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(0,0,0,.6)",backdropFilter:"blur(4px)"}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:480,maxHeight:"90vh",borderRadius:20,background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #2d2a45":"1.5px solid #e2e8f0",boxShadow:"0 24px 60px rgba(0,0,0,.35)",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+
+        {/* Header */}
+        <div style={{padding:"18px 20px 14px",background:"linear-gradient(135deg,#6366f1,#3b82f6)",position:"relative"}}>
+          <button onClick={onClose} style={{position:"absolute",top:12,right:14,background:"rgba(255,255,255,.15)",border:"none",cursor:"pointer",color:"#fff",fontSize:14,borderRadius:"50%",width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+          <p style={{fontSize:15,fontWeight:700,color:"#fff",margin:"0 0 3px"}}>🙏 Help us make this better</p>
+          <p style={{fontSize:11.5,color:"rgba(255,255,255,.8)",margin:0}}>This app is still being improved — your honest feedback makes a real difference. Takes 2 minutes.</p>
+        </div>
+
+        {submitted?(
+          <div style={{padding:"32px 20px",textAlign:"center"}}>
+            <p style={{fontSize:28,margin:"0 0 8px"}}>🎉</p>
+            <p style={{fontSize:15,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",margin:"0 0 4px"}}>Thank you so much!</p>
+            <p style={{fontSize:12.5,color:tx2,margin:0}}>Your feedback has been recorded and will directly shape the next version.</p>
+          </div>
+        ):(
+          <div style={{overflowY:"auto",padding:"16px 20px"}}>
+            <div style={{marginBottom:11}}>
+              <p style={{fontSize:12,fontWeight:600,color:tx2,margin:"0 0 5px"}}>Your name <span style={{color:tx3,fontWeight:400}}>(optional)</span></p>
+              <input value={form.name} onChange={e=>set("name",e.target.value)} placeholder="e.g. Priya" style={{width:"100%",padding:"7px 11px",borderRadius:9,border:`1.5px solid ${border}`,background:surf,color:tx1,fontSize:12.5,outline:"none",boxSizing:"border-box"}}/>
+            </div>
+            <Radio label="How helpful was this tool?" opts={["1","2","3","4","5"]} val={form.helpful} onChange={v=>set("helpful",v)} req/>
+            <Radio label="Was anything confusing?" opts={["No, it was clear","One or two things unclear","Quite confusing"]} val={form.confusing} onChange={v=>set("confusing",v)} req/>
+            <Radio label="Would you recommend this to a friend?" opts={["Yes","No"]} val={form.recommend} onChange={v=>set("recommend",v)} req/>
+            <Radio label="Would you pay for a premium version?" opts={["Yes, I'd pay","Maybe","No, free only"]} val={form.willPay} onChange={v=>set("willPay",v)} req/>
+            <Radio label="How much per month?" opts={["₹49–99","₹100–199","₹200–499","₹500+ lifetime"]} val={form.howMuch} onChange={v=>set("howMuch",v)} req/>
+            <div style={{marginBottom:11}}>
+              <p style={{fontSize:12,fontWeight:600,color:tx2,margin:"0 0 5px"}}>What features would make you pay? <span style={{color:tx3,fontWeight:400}}>(optional)</span></p>
+              <input value={form.features} onChange={e=>set("features",e.target.value)} placeholder="e.g. PDF export, save history..." style={{width:"100%",padding:"7px 11px",borderRadius:9,border:`1.5px solid ${border}`,background:surf,color:tx1,fontSize:12.5,outline:"none",boxSizing:"border-box"}}/>
+            </div>
+            <div style={{marginBottom:14}}>
+              <p style={{fontSize:12,fontWeight:600,color:tx2,margin:"0 0 5px"}}>Anything else? <span style={{color:tx3,fontWeight:400}}>(optional)</span></p>
+              <textarea value={form.other} onChange={e=>set("other",e.target.value)} placeholder="Any other thoughts..." rows={2} style={{width:"100%",padding:"7px 11px",borderRadius:9,border:`1.5px solid ${border}`,background:surf,color:tx1,fontSize:12.5,outline:"none",resize:"vertical",fontFamily:"inherit",boxSizing:"border-box"}}/>
+            </div>
+            {(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch)&&<p style={{fontSize:11,color:"#f87171",margin:"0 0 8px"}}>* Please complete all required questions</p>}
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={onClose} style={{flex:1,padding:"10px 0",borderRadius:11,border:`1px solid ${border}`,background:"transparent",cursor:"pointer",fontSize:12,fontWeight:600,color:tx3}}>Maybe later</button>
+              <button onClick={handleSubmit} disabled={sending||!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch} style={{flex:2,padding:"10px 0",borderRadius:11,border:"none",cursor:(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch)?"not-allowed":"pointer",fontSize:12.5,fontWeight:700,background:(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch)?"#e2e8f0":"linear-gradient(135deg,#6366f1,#3b82f6)",color:(!form.helpful||!form.confusing||!form.recommend||!form.willPay||!form.howMuch)?"#94a3b8":"#fff"}}>
+                {sending?"Submitting...":"Submit feedback"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── FEEDBACK FORM ────────────────────────────────────────────────────────────
 function FeedbackForm({dark,recommendedTest,objective,mode}){
   const [open,setOpen]=useState(false);
@@ -826,8 +917,12 @@ function FeedbackForm({dark,recommendedTest,objective,mode}){
   return(
     <div style={{marginTop:10}}>
       {!open?(
-        <button onClick={()=>setOpen(true)} style={{width:"100%",padding:"12px 0",borderRadius:14,border:`1.5px dashed ${dark?"#2d2a45":"#c7d2fe"}`,background:"transparent",cursor:"pointer",fontSize:12.5,fontWeight:600,color:dark?"#818cf8":"#6366f1",display:"flex",alignItems:"center",justifyContent:"center",gap:7,transition:"all .15s"}}>
-          🙏 Share feedback — help improve this app (2 min)
+        <button onClick={()=>setOpen(true)} style={{width:"100%",padding:"14px 18px",borderRadius:14,border:"none",background:"linear-gradient(135deg,#6366f1,#3b82f6)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",transition:"all .15s",boxShadow:"0 4px 14px rgba(99,102,241,.35)"}}>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"flex-start",gap:2}}>
+            <span style={{fontSize:13.5,fontWeight:700,color:"#fff"}}>🙏 Help us make this better</span>
+            <span style={{fontSize:11,color:"rgba(255,255,255,.75)"}}>2 minutes — your feedback shapes the next version</span>
+          </div>
+          <span style={{fontSize:11,fontWeight:600,color:"rgba(255,255,255,.85)",background:"rgba(255,255,255,.15)",padding:"4px 10px",borderRadius:99,whiteSpace:"nowrap"}}>Share →</span>
         </button>
       ):(
         <div style={{borderRadius:16,background:dark?"#1a1730":"#fff",border:`1.5px solid ${border}`,overflow:"hidden"}}>
@@ -1202,13 +1297,16 @@ export default function App(){
   const [dark,setDark]=useState(false);
   const [beginner,setBeginner]=useState(true);
   const [showGlossary,setShowGlossary]=useState(false);
+  const [showFeedbackModal,setShowFeedbackModal]=useState(false);
+  const [feedbackDone,setFeedbackDone]=useState(false);
+  const [showResetModal,setShowResetModal]=useState(false);
   const [cQ,setCQ]=useState("objective");
   const [ans,setAns]=useState({});
   const [hist,setHist]=useState(["objective"]);
   const [aKey,setAKey]=useState(0);
   const [aDir,setADir]=useState("forward");
   const go=(dir,q)=>{setADir(dir);setAKey(k=>k+1);setCQ(q);};
-  const handleNext=()=>{if(!ans[QS[cQ]?.key]) return;const nq=nextQ(cQ,ans);setHist(h=>[...h,nq]);go("forward",nq);};
+  const handleNext=()=>{if(!ans[QS[cQ]?.key]) return;const nq=nextQ(cQ,ans);setHist(h=>[...h,nq]);go("forward",nq);if(nq==="result") startFeedbackTimer();};
   const handlePrev=()=>{if(hist.length<=1) return;const nh=hist.slice(0,-1);setHist(nh);go("backward",nh[nh.length-1]);};
   const handleJump=(targetQId)=>{
     const idx=hist.indexOf(targetQId);if(idx<0) return;
@@ -1218,7 +1316,24 @@ export default function App(){
     after.forEach(qId=>{const k=QID_TO_KEY[qId];if(k) delete newAns[k];});
     setAns(newAns);setHist(newHist);go("backward",targetQId);
   };
-  const reset=()=>{setAns({});setHist(["objective"]);go("forward","objective");};
+  // 30-second auto popup timer
+  const feedbackTimerRef = useState(null);
+  const startFeedbackTimer=()=>{
+    if(feedbackDone) return;
+    if(feedbackTimerRef[0]) clearTimeout(feedbackTimerRef[0]);
+    feedbackTimerRef[0]=setTimeout(()=>{
+      if(!feedbackDone) setShowFeedbackModal(true);
+    },30000);
+  };
+
+  const reset=(skipModal)=>{
+    if(!skipModal&&!feedbackDone&&cQ==="result"){
+      setShowResetModal(true);
+      return;
+    }
+    if(feedbackTimerRef[0]) clearTimeout(feedbackTimerRef[0]);
+    setAns({});setHist(["objective"]);go("forward","objective");
+  };
   const progress=cQ==="result"?100:Math.min(90,Math.round((hist.length/10)*100));
   const tx1=dark?"#f1f5f9":"#13111e",tx3=dark?"#8896aa":"#94a3b8",tx2=dark?"#b4bcd0":"#3d3960";
 
@@ -1317,6 +1432,17 @@ export default function App(){
   return(
     <div style={{minHeight:"100vh",background:dark?"#13111e":"linear-gradient(135deg,#f8faff,#eef2ff,#eff6ff)",transition:"background .3s"}}>
       {showGlossary&&<GlossaryModal dark={dark} onClose={()=>setShowGlossary(false)}/>}
+      {showFeedbackModal&&!feedbackDone&&<FeedbackModal dark={dark} onClose={()=>setShowFeedbackModal(false)} onSubmitAndClose={()=>{setShowFeedbackModal(false);setFeedbackDone(true);}} recommendedTest={T[recommend(ans)]?.n} objective={ans.objective} mode={beginner?"Beginner":"Expert"}/>}
+      {showResetModal&&<div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)"}} onClick={()=>setShowResetModal(false)}>
+        <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxWidth:380,borderRadius:20,background:dark?"#1a1730":"#fff",border:dark?"1.5px solid #2d2a45":"1.5px solid #e2e8f0",padding:"24px 22px",boxShadow:"0 20px 50px rgba(0,0,0,.3)"}}>
+          <p style={{fontSize:16,fontWeight:700,color:dark?"#f1f5f9":"#0f172a",margin:"0 0 6px"}}>Before you go 👋</p>
+          <p style={{fontSize:13,color:dark?"#b4bcd0":"#475569",margin:"0 0 20px",lineHeight:1.6}}>Would you take 2 minutes to share your feedback? It genuinely helps us improve this tool for students like you.</p>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <button onClick={()=>{setShowResetModal(false);setShowFeedbackModal(true);}} style={{padding:"12px 0",borderRadius:12,border:"none",cursor:"pointer",fontSize:13,fontWeight:700,background:"linear-gradient(135deg,#6366f1,#3b82f6)",color:"#fff",boxShadow:"0 4px 12px rgba(99,102,241,.35)"}}>🙏 Yes, I'll share feedback</button>
+            <button onClick={()=>{setShowResetModal(false);reset(true);}} style={{padding:"11px 0",borderRadius:12,border:dark?"1px solid #2d2a45":"1px solid #e2e8f0",cursor:"pointer",fontSize:12.5,fontWeight:600,background:"transparent",color:dark?"#8896aa":"#64748b"}}>No thanks, start new analysis</button>
+          </div>
+        </div>
+      </div>}
       <style>{`
         @keyframes slideR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
         @keyframes slideL{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
