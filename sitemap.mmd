@@ -1,0 +1,90 @@
+%%{init: {'theme': 'dark', 'flowchart': {'curve': 'basis', 'nodeSpacing': 50, 'rankSpacing': 90}}}%%
+flowchart LR
+
+  START([" 🚀 Entry Point\nstattest-landing.vercel.app "]):::start
+
+  OBJ["🎯 objective\nWhat are you trying\nto find out?"]:::question
+
+  GRP["👥 groups\nHow many groups\nare you comparing?"]:::question
+
+  DES["🔄 design\nSame or different\npeople in groups?"]:::question
+
+  DV["📊 dv_type\nWhat kind of data\nis your outcome?"]:::question
+
+  LT["📏 likert_type\nSingle question or\nfull questionnaire?"]:::question
+
+  RS["📅 research_stage\nWhere are you in\nyour research?"]:::question
+
+  NN["👤 norm_n\nParticipants\nper group?"]:::question
+
+  NC["🔬 norm_check\nHow did you check\nnormality?"]:::question
+
+  NR["📈 norm_result\nWhat does your\ndata look like?"]:::question
+
+  RT["🔗 rel_type\nWhat type of data\nare both variables?"]:::question
+
+  CS["📏 cell_size\nFewer than 40\nparticipants?"]:::question
+
+  PDV["🎲 pred_dv_type\nWhat type is the\noutcome variable?"]:::question
+
+  PIV["🔢 pred_iv_count\nHow many predictor\nvariables?"]:::question
+
+  R_PROP["📋 ProposalResult\nRecommended test\n+ G*Power guide"]:::result
+
+  R_FULL["✅ Result — Full\nTest + normality\nanalysis switcher"]:::result
+
+  R_BASIC["📊 Result\nRecommended test\n+ next steps"]:::result
+
+  G_MODAL["📖 Glossary Modal\n40+ stats terms\nwith search"]:::modal
+
+  F_MODAL["💬 Feedback Modal\nAuto-pops after\n15s on result"]:::modal
+
+  RST_MODAL["🔄 Reset Modal\nConfirm reset\n+ feedback prompt"]:::modal
+
+  START --> OBJ
+
+  OBJ -->|"Compare"| GRP
+  OBJ -->|"Relationship"| RT
+  OBJ -->|"Predict"| PDV
+  OBJ -->|"Mediation/Mod"| R_BASIC
+
+  GRP -->|"2 or 3+ groups"| DES
+  DES -->|"Indep / Paired / Repeated"| DV
+
+  DV -->|"Likert Scale"| LT
+  DV -->|"Continuous"| RS
+  DV -->|"Ordinal / Categorical"| R_BASIC
+  DV -->|"Binary + independent"| CS
+
+  LT -->|"Single item"| R_BASIC
+  LT -->|"Multi-item scale"| RS
+
+  RS -->|"Proposal"| R_PROP
+  RS -->|"Data collected"| R_PROP
+  RS -->|"Data analysed"| NN
+
+  NN -->|"< 30 / 30-100 / > 100"| NC
+  NC -->|"Various methods"| NR
+  NR -->|"Normal / Skewed / Unsure"| R_FULL
+
+  RT -->|"Both continuous"| RS
+  RT -->|"Ordinal / Mixed"| R_BASIC
+  RT -->|"Both categorical"| CS
+
+  CS -->|"Yes / No"| R_BASIC
+
+  PDV -->|"Continuous"| PIV
+  PDV -->|"Binary / Categorical"| R_BASIC
+  PIV -->|"One / Multiple"| R_BASIC
+
+  R_BASIC -.->|"? header btn"| G_MODAL
+  R_PROP  -.->|"? header btn"| G_MODAL
+  R_FULL  -.->|"? header btn"| G_MODAL
+  R_FULL  -.->|"auto 15s"| F_MODAL
+  R_PROP  -.->|"reset btn"| RST_MODAL
+  R_BASIC -.->|"reset btn"| RST_MODAL
+
+  classDef start    fill:#4f46e5,color:#fff,stroke:#6366f1,stroke-width:2px
+  classDef question fill:#1d4ed8,color:#fff,stroke:#3b82f6,stroke-width:2px
+  classDef result   fill:#065f46,color:#fff,stroke:#10b981,stroke-width:2px
+  classDef modal    fill:#92400e,color:#fff,stroke:#f59e0b,stroke-width:2px

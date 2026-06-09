@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StatTest Selector — Interactive Sitemap</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #263347;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --blue: #3b82f6;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --indigo: #6366f1;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    height: 56px;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  header h1 { font-size: 17px; font-weight: 700; color: var(--text); }
+  .badge {
+    background: var(--indigo);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .app-link {
+    background: var(--blue);
+    color: white;
+    padding: 7px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: opacity 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .app-link:hover { opacity: 0.85; }
+  .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .zoom-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .zoom-btn:hover { background: var(--surface2); color: var(--text); }
+  .zoom-label {
+    font-size: 12px;
+    color: var(--muted);
+    min-width: 38px;
+    text-align: center;
+  }
+  .layout {
+    display: flex;
+    height: calc(100vh - 56px);
+  }
+  .diagram-wrap {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg);
+  }
+  .diagram-pan {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    cursor: grab;
+    user-select: none;
+  }
+  .diagram-pan:active { cursor: grabbing; }
+  .diagram-inner {
+    display: inline-block;
+    padding: 32px;
+    transform-origin: top left;
+  }
+  .mermaid { display: inline-block; }
+  .sidebar {
+    width: 300px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .sidebar-header h2 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+  .sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 18px;
+  }
+  /* Legend */
+  .legend { margin-bottom: 20px; }
+  .legend-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12.5px;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  /* Detail panel */
+  .detail-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    transition: border-color 0.2s;
+  }
+  .detail-card.active { border-color: var(--blue); }
+  .detail-placeholder {
+    text-align: center;
+    padding: 24px 8px;
+    color: var(--muted);
+  }
+  .detail-placeholder .icon { font-size: 28px; margin-bottom: 8px; }
+  .detail-placeholder p { font-size: 12px; line-height: 1.5; }
+  .detail-node-name {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .detail-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .type-question { background: rgba(59,130,246,0.15); color: #93c5fd; }
+  .type-result   { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+  .type-modal    { background: rgba(245,158,11,0.15);  color: #fcd34d; }
+  .type-start    { background: rgba(99,102,241,0.15);  color: #c7d2fe; }
+  .detail-question {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.45;
+    margin-bottom: 10px;
+  }
+  .detail-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .options-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+  .option-pill {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 7px 9px;
+    margin-bottom: 5px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text);
+  }
+  .opt-emoji { flex-shrink: 0; font-size: 13px; }
+  /* Stats */
+  .stats-section {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .stats-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .stat-key { color: var(--muted); }
+  .stat-val { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  /* Pulse on selected */
+  .node-selected > rect,
+  .node-selected > circle,
+  .node-selected > polygon {
+    stroke-width: 3px !important;
+    filter: brightness(1.3);
+  }
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>📊 StatTest Selector — Interactive Sitemap</h1>
+    <span class="badge">SPA Flow</span>
+  </div>
+  <div class="header-right">
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="changeZoom(-0.1)">−</button>
+      <span class="zoom-label" id="zoomLabel">100%</span>
+      <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
+      <button class="zoom-btn" onclick="resetZoom()" style="font-size:11px">Reset</button>
+    </div>
+    <a href="https://stattest-landing.vercel.app/" target="_blank" class="app-link">↗ Live App</a>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="diagram-wrap">
+    <div class="diagram-pan" id="panArea">
+      <div class="diagram-inner" id="diagramInner">
+        <div class="mermaid" id="diagram">
+%%{init: {'theme': 'dark', 'flowchart': {'curve': 'basis', 'nodeSpacing': 50, 'rankSpacing': 90, 'htmlLabels': true}}}%%
+flowchart LR
+
+  START([" 🚀 Entry Point\n stattest-landing.vercel.app "]):::start
+
+  OBJ["🎯 **objective**\nWhat are you trying\nto find out?"]:::question
+
+  GRP["👥 **groups**\nHow many groups\nare you comparing?"]:::question
+
+  DES["🔄 **design**\nSame or different\npeople in groups?"]:::question
+
+  DV["📊 **dv_type**\nWhat kind of data\nis your outcome?"]:::question
+
+  LT["📏 **likert_type**\nSingle question or\nfull questionnaire?"]:::question
+
+  RS["📅 **research_stage**\nWhere are you in\nyour research?"]:::question
+
+  NN["👤 **norm_n**\nParticipants\nper group?"]:::question
+
+  NC["🔬 **norm_check**\nHow did you check\nnormality?"]:::question
+
+  NR["📈 **norm_result**\nWhat does your\ndata look like?"]:::question
+
+  RT["🔗 **rel_type**\nWhat type of data\nare both variables?"]:::question
+
+  CS["📏 **cell_size**\nFewer than 40\nparticipants?"]:::question
+
+  PDV["🎲 **pred_dv_type**\nWhat type is the\noutcome variable?"]:::question
+
+  PIV["🔢 **pred_iv_count**\nHow many predictor\nvariables?"]:::question
+
+  R_PROP["📋 **ProposalResult**\nRecommended test\n+ G✱Power guide"]:::result
+
+  R_FULL["✅ **Result — Full**\nTest + normality\nanalysis switcher"]:::result
+
+  R_BASIC["📊 **Result**\nRecommended test\n+ next steps"]:::result
+
+  G_MODAL["📖 **Glossary Modal**\n40+ stats terms\nwith search"]:::modal
+
+  F_MODAL["💬 **Feedback Modal**\nAuto-pops after\n15s on result"]:::modal
+
+  RST_MODAL["🔄 **Reset Modal**\nConfirm reset\n+ feedback prompt"]:::modal
+
+  START --> OBJ
+
+  OBJ -->|"⚖️ Compare"| GRP
+  OBJ -->|"🔗 Relationship"| RT
+  OBJ -->|"🎯 Predict"| PDV
+  OBJ -->|"🔀 Mediation/Mod"| R_BASIC
+
+  GRP -->|"2 or 3+ groups"| DES
+  DES -->|"Indep / Paired / Repeated"| DV
+
+  DV -->|"Likert Scale"| LT
+  DV -->|"Continuous"| RS
+  DV -->|"Ordinal / Categorical"| R_BASIC
+  DV -->|"Binary + independent"| CS
+
+  LT -->|"Single item"| R_BASIC
+  LT -->|"Multi-item scale"| RS
+
+  RS -->|"Proposal"| R_PROP
+  RS -->|"Data collected"| R_PROP
+  RS -->|"Data analysed"| NN
+
+  NN -->|"< 30 · 30–100 · > 100"| NC
+  NC -->|"Various methods"| NR
+  NR -->|"Normal · Skewed · Unsure"| R_FULL
+
+  RT -->|"Both continuous"| RS
+  RT -->|"Ordinal · Mixed"| R_BASIC
+  RT -->|"Both categorical"| CS
+
+  CS -->|"Yes / No"| R_BASIC
+
+  PDV -->|"Continuous"| PIV
+  PDV -->|"Binary / Categorical"| R_BASIC
+  PIV -->|"One · Multiple"| R_BASIC
+
+  R_BASIC -.->|"? header btn"| G_MODAL
+  R_PROP  -.->|"? header btn"| G_MODAL
+  R_FULL  -.->|"? header btn"| G_MODAL
+  R_FULL  -.->|"auto 15 s"| F_MODAL
+  R_PROP  -.->|"↻ reset btn"| RST_MODAL
+  R_BASIC -.->|"↻ reset btn"| RST_MODAL
+
+  classDef start    fill:#4f46e5,color:#fff,stroke:#6366f1,stroke-width:2px,rx:16
+  classDef question fill:#1d4ed8,color:#fff,stroke:#3b82f6,stroke-width:2px
+  classDef result   fill:#065f46,color:#fff,stroke:#10b981,stroke-width:2px
+  classDef modal    fill:#92400e,color:#fff,stroke:#f59e0b,stroke-width:2px
+
+  click START   showDetail
+  click OBJ     showDetail
+  click GRP     showDetail
+  click DES     showDetail
+  click DV      showDetail
+  click LT      showDetail
+  click RS      showDetail
+  click NN      showDetail
+  click NC      showDetail
+  click NR      showDetail
+  click RT      showDetail
+  click CS      showDetail
+  click PDV     showDetail
+  click PIV     showDetail
+  click R_PROP  showDetail
+  click R_FULL  showDetail
+  click R_BASIC showDetail
+  click G_MODAL showDetail
+  click F_MODAL showDetail
+  click RST_MODAL showDetail
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>Node Inspector</h2>
+    </div>
+    <div class="sidebar-body">
+
+      <div class="legend">
+        <div class="legend-title">Legend</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#4f46e5"></div> Entry point</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#1d4ed8"></div> Question screen (14)</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#065f46"></div> Result screen (3 types)</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#92400e"></div> Modal overlay (3)</div>
+        <div class="legend-row"><div class="legend-dot" style="background:#334155;border:1px dashed #94a3b8"></div> Dashed = triggered overlay</div>
+      </div>
+
+      <div class="detail-card" id="detailCard">
+        <div class="detail-placeholder">
+          <div class="icon">👆</div>
+          <p>Click any node in the<br>diagram to inspect it</p>
+        </div>
+      </div>
+
+      <div class="stats-section">
+        <div class="stats-title">App Stats</div>
+        <div class="stat-row"><span class="stat-key">Total screens</span><span class="stat-val">19</span></div>
+        <div class="stat-row"><span class="stat-key">Question screens</span><span class="stat-val">14</span></div>
+        <div class="stat-row"><span class="stat-key">Result screen types</span><span class="stat-val">3</span></div>
+        <div class="stat-row"><span class="stat-key">Modal overlays</span><span class="stat-val">3</span></div>
+        <div class="stat-row"><span class="stat-key">Routing</span><span class="stat-val">State-based SPA</span></div>
+        <div class="stat-row"><span class="stat-key">Framework</span><span class="stat-val">React + Vite</span></div>
+        <div class="stat-row"><span class="stat-key">Deployed</span><span class="stat-val">Vercel</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const NODES = {
+  START: {
+    type: 'start',
+    name: 'Entry Point',
+    question: 'stattest-landing.vercel.app',
+    desc: 'Single-page React application — no file-based routing. The entire app loads at "/" and navigation is handled by React state (`cQ` — currentQuestion).',
+    options: [
+      { e: '📱', t: 'Responsive: single-column mobile / two-column desktop (≥ 900px)' },
+      { e: '🌙', t: 'Dark mode toggle persists across session' },
+      { e: '🎓', t: 'Beginner / Expert mode toggle changes question wording' },
+      { e: '📖', t: '"?" button opens Glossary Modal from any screen' },
+    ]
+  },
+  OBJ: {
+    type: 'question',
+    name: 'objective',
+    question: 'What are you trying to find out?',
+    desc: 'Entry question — routes the user to one of four major analysis branches.',
+    options: [
+      { e: '⚖️', t: 'Compare groups or conditions → groups' },
+      { e: '🔗', t: 'Explore a relationship between variables → rel_type' },
+      { e: '🎯', t: 'Predict an outcome variable → pred_dv_type' },
+      { e: '🔀', t: 'Mediation or moderation analysis → result (direct)' },
+    ]
+  },
+  GRP: {
+    type: 'question',
+    name: 'groups',
+    question: 'How many groups are you comparing?',
+    desc: 'Determines whether the design is a two-group or multi-group comparison.',
+    options: [
+      { e: '2️⃣', t: '2 groups → design' },
+      { e: '3️⃣', t: '3 or more groups → design' },
+    ]
+  },
+  DES: {
+    type: 'question',
+    name: 'design',
+    question: 'Are the same people in all groups, or different people?',
+    desc: 'Establishes the study design — determines independence assumption.',
+    options: [
+      { e: '👥', t: 'Independent (different people in each group) → dv_type' },
+      { e: '🔁', t: 'Paired (same people measured twice) → dv_type' },
+      { e: '🔂', t: 'Repeated measures (same people 3+ times) → dv_type' },
+    ]
+  },
+  DV: {
+    type: 'question',
+    name: 'dv_type',
+    question: 'What kind of data is your outcome variable?',
+    desc: 'The level of measurement of the dependent variable is the primary determinant of which test is recommended.',
+    options: [
+      { e: '📉', t: 'Continuous (e.g. score, time, weight) → research_stage' },
+      { e: '🏷️', t: 'Ordinal (ranked/ordered) → result directly' },
+      { e: '📊', t: 'Likert scale → likert_type (further clarification)' },
+      { e: '✅', t: 'Binary (yes/no, pass/fail) + independent design → cell_size' },
+      { e: '🗂️', t: 'Categorical (multiple unordered groups) → result directly' },
+    ]
+  },
+  LT: {
+    type: 'question',
+    name: 'likert_type',
+    question: 'Is this a single question or a full questionnaire?',
+    desc: 'Distinguishes a single Likert item (treated as ordinal) from a multi-item composite scale (treated as interval/continuous).',
+    options: [
+      { e: '❓', t: 'Single item → result (treated as ordinal)' },
+      { e: '📋', t: 'Multi-item composite scale → research_stage (treated as continuous)' },
+    ]
+  },
+  RS: {
+    type: 'question',
+    name: 'research_stage',
+    question: 'Where are you in your research right now?',
+    desc: 'Determines which result variant to show — proposal/planning vs full post-hoc analysis.',
+    options: [
+      { e: '✏️', t: 'Writing proposal → ProposalResult (G*Power focus)' },
+      { e: '📦', t: 'Data collected, not yet analysed → ProposalResult' },
+      { e: '📈', t: 'Data already analysed → norm_n (normality pathway)' },
+    ]
+  },
+  NN: {
+    type: 'question',
+    name: 'norm_n',
+    question: 'How many participants do you have per group?',
+    desc: 'Sample size informs how strictly normality needs to be assessed (Central Limit Theorem applies at n > 30).',
+    options: [
+      { e: '🔴', t: 'Fewer than 30 → norm_check (strict check required)' },
+      { e: '🟡', t: '30 to 100 → norm_check' },
+      { e: '🟢', t: 'More than 100 → norm_check (CLT largely applies)' },
+    ]
+  },
+  NC: {
+    type: 'question',
+    name: 'norm_check',
+    question: 'How did you check whether your data is normally distributed?',
+    desc: 'Captures the normality assessment method used — affects the guidance shown in the result.',
+    options: [
+      { e: '📊', t: 'Shapiro-Wilk test → norm_result' },
+      { e: '🔍', t: 'Q-Q plot (quantile-quantile) → norm_result' },
+      { e: '📉', t: 'Histogram → norm_result' },
+      { e: '✅', t: 'All three methods → norm_result' },
+      { e: '❌', t: "Haven't checked yet → norm_result (guidance provided)" },
+    ]
+  },
+  NR: {
+    type: 'question',
+    name: 'norm_result',
+    question: 'What does your data look like?',
+    desc: 'Final question before result — determines whether parametric or non-parametric is foregrounded.',
+    options: [
+      { e: '🔔', t: 'Clearly normal → Result (parametric foregrounded)' },
+      { e: '📉', t: 'Skewed or non-normal → Result (non-parametric foregrounded)' },
+      { e: '🤔', t: 'Unsure → Result (both options shown side-by-side)' },
+    ]
+  },
+  RT: {
+    type: 'question',
+    name: 'rel_type',
+    question: 'What type of data are your two variables?',
+    desc: 'For "relationship" objective — determines which association or correlation test to use.',
+    options: [
+      { e: '📈', t: 'Both continuous → research_stage (Pearson / Spearman path)' },
+      { e: '🏆', t: 'Both ordinal / ranked → result (Spearman directly)' },
+      { e: '✅', t: 'Continuous + binary → result (Point-biserial)' },
+      { e: '🗂️', t: 'Both categorical → cell_size (Chi-square / Fisher path)' },
+    ]
+  },
+  CS: {
+    type: 'question',
+    name: 'cell_size',
+    question: 'Is your sample size small — fewer than 40 participants?',
+    desc: "Determines whether Fisher's Exact Test is needed instead of Chi-square (assumption: expected cell frequencies ≥ 5).",
+    options: [
+      { e: '✅', t: 'No (adequate sample) → result (Chi-square recommended)' },
+      { e: '⚠️', t: "Yes (small cells) → result (Fisher's Exact recommended)" },
+    ]
+  },
+  PDV: {
+    type: 'question',
+    name: 'pred_dv_type',
+    question: 'What type of data is the outcome you want to predict?',
+    desc: 'For "predict" objective — determines the regression type.',
+    options: [
+      { e: '📉', t: 'Continuous → pred_iv_count (linear regression path)' },
+      { e: '✅', t: 'Binary → result (logistic regression)' },
+      { e: '🗂️', t: 'Categorical → result (multinomial logistic regression)' },
+    ]
+  },
+  PIV: {
+    type: 'question',
+    name: 'pred_iv_count',
+    question: 'How many predictor variables do you have?',
+    desc: 'Distinguishes simple from multiple linear regression.',
+    options: [
+      { e: '1️⃣', t: 'One predictor → result (Simple Linear Regression)' },
+      { e: '🔢', t: 'Multiple predictors → result (Multiple Linear Regression)' },
+    ]
+  },
+  R_PROP: {
+    type: 'result',
+    name: 'ProposalResult Screen',
+    question: 'Test recommendation for proposal / data-collected stage',
+    desc: 'Shown when research_stage is "proposal" or "collected". Focuses on helping the user plan their analysis before collecting or running it.',
+    options: [
+      { e: '🔬', t: 'Recommended statistical test with plain-language explanation' },
+      { e: '📝', t: 'APA 7th edition write-up template with copy button' },
+      { e: '💡', t: 'Key assumptions the test requires' },
+      { e: '📏', t: 'Effect size guidance (Cohen\'s conventions)' },
+      { e: '⚙️', t: 'Step-by-step software instructions (SPSS · jamovi · JASP)' },
+      { e: '🧮', t: 'G*Power sample size calculator walk-through' },
+    ]
+  },
+  R_FULL: {
+    type: 'result',
+    name: 'Result Screen — Full (Analysed)',
+    question: 'Full result with parametric ↔ non-parametric switcher',
+    desc: 'Shown after the normality check pathway. Includes dual-panel comparison of parametric and non-parametric options.',
+    options: [
+      { e: '🔄', t: 'Dual-panel switcher: parametric ↔ non-parametric' },
+      { e: '📊', t: 'Normality interpretation guide with distribution visuals' },
+      { e: '📝', t: 'Context-aware Methods paragraph generator' },
+      { e: '🏷️', t: 'Tabs: Why this test / How to run it / Write-Up / Software' },
+      { e: '⚙️', t: 'Full software instructions for SPSS, jamovi, JASP' },
+      { e: '💬', t: 'FeedbackModal auto-opens after 15 seconds' },
+    ]
+  },
+  R_BASIC: {
+    type: 'result',
+    name: 'Result Screen',
+    question: 'Standard result for most analysis paths',
+    desc: 'The default result screen — adapts its content based on the test recommended. Shared by most question paths.',
+    options: [
+      { e: '🔬', t: 'Recommended test + plain-language rationale' },
+      { e: '📝', t: 'APA 7 write-up template (copy to clipboard)' },
+      { e: '💡', t: 'Assumptions and prerequisites' },
+      { e: '🔁', t: 'Alternative test card (where applicable)' },
+      { e: '⚙️', t: 'Software instructions: SPSS · jamovi · JASP' },
+      { e: '🧮', t: 'G*Power guidance with warnings' },
+    ]
+  },
+  G_MODAL: {
+    type: 'modal',
+    name: 'Glossary Modal',
+    question: 'Statistical jargon glossary',
+    desc: 'Triggered by the "?" button in the header. Available from any screen at any point in the questionnaire.',
+    options: [
+      { e: '📖', t: '40+ statistical terms defined in plain language' },
+      { e: '🔍', t: 'Live search / filter to find terms' },
+      { e: '❌', t: 'Dismiss: click X or click outside the modal' },
+    ]
+  },
+  F_MODAL: {
+    type: 'modal',
+    name: 'Feedback Modal',
+    question: 'User feedback form',
+    desc: 'Auto-triggered 15 seconds after reaching a result screen (if not previously dismissed in this session).',
+    options: [
+      { e: '📝', t: 'Name field (optional)' },
+      { e: '⭐', t: 'Helpfulness rating' },
+      { e: '🤔', t: 'What was confusing?' },
+      { e: '✨', t: 'Feature or improvement requests' },
+      { e: '❌', t: 'Dismiss: submit or close button' },
+    ]
+  },
+  RST_MODAL: {
+    type: 'modal',
+    name: 'Reset Modal',
+    question: 'Reset confirmation + feedback prompt',
+    desc: 'Triggered by the Reset (↻) button in the header when the user is on a result screen.',
+    options: [
+      { e: '💬', t: '"Share feedback" → opens FeedbackModal' },
+      { e: '🔄', t: '"Skip, start new analysis" → clears all answers and returns to objective' },
+      { e: '❌', t: 'Dismiss: click X or outside the modal' },
+    ]
+  },
+};
+
+const typeLabel = { question: 'Question Screen', result: 'Result Screen', modal: 'Modal Overlay', start: 'Entry Point' };
+const typeClass = { question: 'type-question', result: 'type-result', modal: 'type-modal', start: 'type-start' };
+const typeEmoji = { question: '❓', result: '📊', modal: '💬', start: '🚀' };
+
+window.showDetail = function(id) {
+  const data = NODES[id];
+  if (!data) return;
+  const card = document.getElementById('detailCard');
+  card.classList.add('active');
+  card.innerHTML = `
+    <div class="detail-node-name">${data.name}</div>
+    <span class="detail-type ${typeClass[data.type]}">${typeEmoji[data.type]} ${typeLabel[data.type]}</span>
+    <div class="detail-question">"${data.question}"</div>
+    ${data.desc ? `<div class="detail-desc">${data.desc}</div>` : ''}
+    <div class="options-label">${data.type === 'question' ? 'Options & routing' : 'Features'}</div>
+    ${data.options.map(o => `<div class="option-pill"><span class="opt-emoji">${o.e}</span><span>${o.t}</span></div>`).join('')}
+  `;
+};
+
+// Zoom
+let zoom = 1;
+const inner = document.getElementById('diagramInner');
+const zoomLabel = document.getElementById('zoomLabel');
+function setZoom(z) {
+  zoom = Math.max(0.3, Math.min(2, z));
+  inner.style.transform = `scale(${zoom})`;
+  zoomLabel.textContent = Math.round(zoom * 100) + '%';
+}
+function changeZoom(d) { setZoom(zoom + d); }
+function resetZoom() { setZoom(1); }
+
+// Pan
+let isPanning = false, startX, startY, scrollLeft, scrollTop;
+const panArea = document.getElementById('panArea');
+panArea.addEventListener('mousedown', e => {
+  if (e.target.closest('.node')) return;
+  isPanning = true;
+  startX = e.pageX - panArea.offsetLeft;
+  startY = e.pageY - panArea.offsetTop;
+  scrollLeft = panArea.scrollLeft;
+  scrollTop = panArea.scrollTop;
+});
+document.addEventListener('mouseup', () => { isPanning = false; });
+document.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  e.preventDefault();
+  panArea.scrollLeft = scrollLeft - (e.pageX - panArea.offsetLeft - startX);
+  panArea.scrollTop = scrollTop - (e.pageY - panArea.offsetTop - startY);
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === '+' || e.key === '=') changeZoom(0.1);
+  if (e.key === '-') changeZoom(-0.1);
+  if (e.key === '0') resetZoom();
+});
+
+// Mouse wheel zoom
+panArea.addEventListener('wheel', e => {
+  e.preventDefault();
+  changeZoom(e.deltaY < 0 ? 0.1 : -0.1);
+}, { passive: false });
+
+mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+</script>
+</body>
+</html>
